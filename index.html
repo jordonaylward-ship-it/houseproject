@@ -44,7 +44,6 @@ h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0
 @media (min-width:900px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .stack{display:grid;gap:22px;min-width:0;align-content:start}
 .gwrap{display:grid;gap:6px;min-width:0;align-content:start}
-.invgrid{align-items:start}
 .person{background:rgba(118,118,128,.09);border-radius:18px;padding:12px;display:grid;gap:16px;align-content:start;min-width:0}
 .phead{display:flex;align-items:center;gap:10px;padding:4px 6px 0;flex-wrap:wrap}
 .avatar{width:38px;height:38px;border-radius:50%;background:var(--pc);color:#fff;display:grid;place-items:center;font:700 15px var(--title);letter-spacing:.02em;flex-shrink:0}
@@ -60,7 +59,7 @@ h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0
 .row+.row::before,.row+.check::before,.check+.row::before,.check+.check::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
 .row.wrapme{flex-wrap:wrap}
 .row.stacked{flex-direction:column;align-items:stretch;gap:8px;padding-block:10px}
-.row.stacked .seg{width:100%}
+.row.stacked .seg{width:100%;max-width:600px}
 .lbl{flex:1;min-width:0;display:grid;gap:1px}
 .hint{font-size:12.5px;color:var(--sec);line-height:1.3}
 .inp{display:flex;align-items:center;gap:1px;border-radius:7px;padding:3px 6px;margin-right:-6px;transition:background .15s}
@@ -105,8 +104,9 @@ tr.muted td{color:var(--sec)}
 th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:1}
 table.stages td:first-child{white-space:normal;min-width:170px;max-width:230px;line-height:1.3}
 table.stages td:first-child .hint{margin-top:2px}
-.invgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
-@media (min-width:900px){.invgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.people{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.money{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media (min-width:900px){.money{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .stepper{display:inline-grid;grid-template-columns:36px 36px 36px;align-items:center;background:var(--seg);border-radius:9px;overflow:hidden}
 .stepper button{border:0;background:transparent;color:var(--label);font:500 20px var(--font);height:32px;cursor:pointer}
 .stepper span{text-align:center;font-weight:600}
@@ -1147,10 +1147,11 @@ function App(){
             </div>
             <SegRow label="Split" options={[["equal","Equal"],["custom","Custom"]]} value={p.splitMode} onChange={v=>set("splitMode",v)}/>
             <SelectRow id="builder" label="Who is the builder" options={R.inv.map(iv=>[String(iv.i), iv.name])} value={String(B.i)} onChange={v=>set("builder",v)}/>
+            <NumRow id="bootsYears" label="Weekly payback runs for" unit="yrs" hint="For anyone paying the builder weekly" value={p.bootsYears} onChange={v=>set("bootsYears",v)}/>
+            <NumRow id="bootsRate" label={`Interest ${B.name} charges`} unit="%" hint="On weekly payback and on money owed until sale. 0 is no interest" value={p.bootsRate} onChange={v=>set("bootsRate",v)}/>
           </Group>
           <Group title={`Paying ${B.name} back`} footer={`${B.name} pays for the build share of anyone set to "Owes ${B.name}". How each person pays him back is set on their card. ${R.allOwers.length>0?`Right now he fronts ${money(R.fronted)} during the build${R.returned>0?`, and ${money(R.returned)} of that comes straight back when it's built`:""}.`:"Nobody owes him right now."}`}>
-            <NumRow id="bootsYears" label="Weekly payback runs for" unit="yrs" hint="For anyone paying weekly" value={p.bootsYears} onChange={v=>set("bootsYears",v)}/>
-            <NumRow id="bootsRate" label={`Interest ${B.name} charges`} unit="%" hint="On weekly payback and on money owed until sale. 0 is no interest" value={p.bootsRate} onChange={v=>set("bootsRate",v)}/>
+            {R.groups.filter(g=>g.owes && g.debt0>0).length===0 && <Val label="Nobody owes him" value=""/>}
             {R.groups.filter(g=>g.owes && g.debt0>0).map(g=><Val key={g.i} label={`${g.name} pay${g.joint?"":"s"} ${B.name}`}
               hint={g.pb==="undecided"?`${money(g.debt0)}. Not decided how, weekly over ${R.tl.bootsYears} years assumed`:g.pb==="weekly"?`${money(g.debt0)} over ${R.tl.bootsYears} years`:g.pb==="cash"?`In cash when it's built, ${monthLabel(p.startMonth,R.tl.buildEnd)}`:g.pb==="sale"?`Out of the sale in year ${Y}${g.weeklyBoots>0?`, plus interest`:""}`:`From a new bank loan when it's built`}
               value={g.pbEff==="weekly"?money(g.weeklyBoots)+" a week":g.pbEff==="sale"&&g.weeklyBoots>0?money(g.weeklyBoots)+" a week interest":money(g.debt0)} c={g.pb==="undecided"?"warnc":""}/>)}
@@ -1159,7 +1160,7 @@ function App(){
           </Group>
         </div>
 
-        <div className="invgrid">
+        <div className="people">
           {R.groups.map(g=>{
             const ids = g.members.map(m=>m.i);
             const lead = g.members[0];
@@ -1196,6 +1197,7 @@ function App(){
                     ? <div className="row"><span className="lbl">Borrowing together<span className="hint">Change this if they'd each take their own loan</span></span><button type="button" className="hbtn plain" onClick={()=>setInvMany(ids,"jointWith",-1)}>Split up</button></div>
                     : others.length>0 && <SelectRow id={`j${lead.i}`} label="Borrows with" hint="Pick someone to share one bank loan and one payback" options={[["-1","Nobody"], ...others.map(x=>[String(x.i), x.name])]} value="-1" onChange={v=>setInv(lead.i,"jointWith",v)}/>}
                 </Group>
+                <div className="money">
                 <Group title="Their money up front">
                   <Val label="Share of all costs" value={money(g.s*R.totalCost)}/>
                   <Val label={g.joint?"One bank loan together":"Bank loan"} value={money(g.loan0)}/>
@@ -1223,6 +1225,7 @@ function App(){
                   <Val label="Profit" value={signed(g.profit)} c={cls(g.profit)} strong/>
                   <Val label="Return a year on their cash" value={pct(g.irr)}/>
                 </Group>
+                </div>
               </div>
             );
           })}
