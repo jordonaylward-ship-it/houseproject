@@ -146,10 +146,10 @@ const DEFAULTS = {
   taxRate: 32, valueGrowth: 5, rentGrowth: 3.5, costGrowth: 3, sellCostPct: 2.5, sellYear: 10,
   investorCount: 4, splitMode: "equal", builder: 0, bootsYears: 10, bootsRate: 0,
   investors: [
-    { name: "Boots",  share: 25, rate: "", tax: "", fund: "loan" },
-    { name: "Jordy",  share: 25, rate: "", tax: "", fund: "boots" },
-    { name: "Joel",   share: 25, rate: "", tax: "", fund: "undecided" },
-    { name: "Bonnie", share: 25, rate: "", tax: "", fund: "boots" },
+    { name: "Boots",  share: 25, rate: "", tax: "", fund: "loan", jointWith: -1 },
+    { name: "Jordy",  share: 25, rate: "", tax: "", fund: "boots", jointWith: 3 },
+    { name: "Joel",   share: 25, rate: "", tax: "", fund: "undecided", jointWith: -1 },
+    { name: "Bonnie", share: 25, rate: "", tax: "", fund: "boots", jointWith: 1 },
   ],
   checks: {}
 };
@@ -184,6 +184,7 @@ function irr(flows){
   for (let i=0;i<200;i++){ const m=(lo+hi)/2; (npv(lo)*npv(m)<=0)?hi=m:lo=m; }
   return (lo+hi)/2;
 }
+const jointOf = raw => { const n = parseFloat(raw); return isFinite(n) ? Math.round(n) : -1; };
 function investorsOf(p){
   const cnt = clamp(Math.round(num(p.investorCount))||1, 1, 10);
   const builderIdx = clamp(Math.round(num(p.builder)), 0, cnt-1);
@@ -193,15 +194,23 @@ function investorsOf(p){
     let fund = ["loan","boots","cash","undecided"].includes(iv.fund) ? iv.fund : "loan";
     if (i===builderIdx && fund==="boots") fund = "loan";
     list.push({ i, name: (iv.name||"").trim() || `Investor ${i+1}`, share: p.splitMode==="equal" ? 100/cnt : num(iv.share),
-      rateRaw: iv.rate ?? "", taxRaw: iv.tax ?? "", fund, isBuilder: i===builderIdx });
+      rateRaw: iv.rate ?? "", taxRaw: iv.tax ?? "", fund, isBuilder: i===builderIdx, jointWith: jointOf(iv.jointWith) });
   }
+  // people who borrow together form one loan group
+  const parent = list.map((_,i)=>i);
+  const find = i => parent[i]===i ? i : (parent[i] = find(parent[i]));
+  list.forEach((x,i)=>{ const j = x.jointWith; if (j>=0 && j<cnt && j!==i){ const a=find(i), b=find(j); if (a!==b) parent[Math.max(a,b)] = Math.min(a,b); } });
+  const map = {}; list.forEach((x,i)=>{ const r=find(i); (map[r]=map[r]||[]).push(i); });
+  const groups = Object.values(map).sort((a,b)=>a[0]-b[0]);
   const tot = list.reduce((s,x)=>s+x.share,0);
-  list.forEach(x=>{
-    x.s = tot>0 ? x.share/tot : 1/cnt;
-    x.rate = x.rateRaw==="" ? num(p.rate) : num(x.rateRaw);
-    x.tax = x.taxRaw==="" ? num(p.taxRate) : num(x.taxRaw);
+  list.forEach(x=>{ x.s = tot>0 ? x.share/tot : 1/cnt; x.tax = x.taxRaw==="" ? num(p.taxRate) : num(x.taxRaw); });
+  groups.forEach((members, gi)=>{
+    let gf = list[members[0]].fund; if (members.includes(builderIdx) && gf==="boots") gf = "loan";
+    const rawRate = members.map(i=>list[i].rateRaw).find(r=>r!=="");
+    const gr = rawRate===undefined ? num(p.rate) : num(rawRate);
+    members.forEach(i=>{ list[i].fund = gf; list[i].rate = gr; list[i].group = gi; list[i].joint = members.length>1; });
   });
-  return { list, shareTotal: tot, builderIdx };
+  return { list, shareTotal: tot, builderIdx, groups };
 }
 
 function run(p, o={}){
@@ -257,7 +266,7 @@ function run(p, o={}){
     base.push({ y, rent, pm, running, landTax, costs: pm+running+landTax, dep, capClaimed: capWorksClaimed, value: startValue*Math.pow(1+n("valueGrowth")/100, y) });
   }
 
-  const { list, shareTotal, builderIdx } = investorsOf(p);
+  const { list, shareTotal, builderIdx, groups: groupIdx } = investorsOf(p);
   const bootsYears = Math.max(1, Math.round(n("bootsYears")));
   const bootsRate = Math.max(0, n("bootsRate"))/100;
   const Y = clamp(Math.round(n("sellYear"))||10, 1, 10);
@@ -350,10 +359,22 @@ function run(p, o={}){
   const flows = inv[0].flows.map((_,i)=>inv.reduce((a,x)=>a+x.flows[i],0));
   const stageTotals = {}; ["settle","sub","build","fitout","lotBack","taxBack"].forEach(k=>stageTotals[k]=inv.reduce((a,x)=>a+x.stages[k],0));
 
+  // loan groups: a couple borrowing together is one loan, one payback, one pocket
+  const sumKeys = ["s","loan0","loan","debt0","hold","holdTaxBack","cashIn","fronted","lotTax","cashBack","cgt","saleNet","profit","weeklyRepay","weeklyBoots","weeklyRecv"];
+  const groups = groupIdx.map((members, gi)=>{
+    const ms = members.map(i=>inv[i]);
+    const g = { gi, members: ms, name: ms.map(x=>x.name).join(" and "), joint: ms.length>1, isBuilder: ms.some(x=>x.isBuilder), owes: ms.some(x=>x.owes), fund: ms[0].fund, rPct: ms[0].rPct, i: ms[0].i };
+    sumKeys.forEach(k=>g[k]=ms.reduce((a,x)=>a+x[k],0));
+    g.rows = base.map((b,i)=>{ const o={y:b.y}; keys.forEach(k=>o[k]=ms.reduce((a,x)=>a+x.rows[i][k],0)); return o; });
+    g.flows = ms[0].flows.map((_,i)=>ms.reduce((a,x)=>a+x.flows[i],0)); g.irr = irr(g.flows);
+    g.stages = {}; Object.keys(ms[0].stages).forEach(k=>g.stages[k]=ms.reduce((a,x)=>a+x.stages[k],0));
+    return g;
+  });
+
   return { duty, subCosts, buildCost, saving, totalCost, bankable, loanStart:sum("loan0"), loan:sum("loan"), owed:sum("debt0"), fronted:builder.fronted,
     holdInt:sum("hold"), holdTaxBack:sum("holdTaxBack"), cashIn:sum("cashIn"), lotTax:sum("lotTax"), cashBack:sum("cashBack"),
     cgt:sum("cgt"), saleNet:sum("saleNet"), profit:sum("profit"), weeklyRepay:sum("weeklyRepay"), irr: irr(flows),
-    rows, inv, builder, owers, shareTotal, sell, keep, lots, perLot, saleGross, lotProfit, weeklyRent, Y, stageTotals,
+    rows, inv, groups, builder, owers, shareTotal, sell, keep, lots, perLot, saleGross, lotProfit, weeklyRent, Y, stageTotals,
     grossYield: (weeklyRent*52)/(keep*perLot + buildCost),
     tl: { settleAt, subMonths, titlesAt, buildStartAt, buildEnd, leaseUp, rentStart, lotSaleAt, buildMonths, sub, sell, bootsYears, hasOwers: owers.length>0 } };
 }
@@ -408,6 +429,12 @@ function mergePlan(obj){
   if (obj && typeof obj==="object") Object.keys(DEFAULTS).forEach(k=>{ if (obj[k]!==undefined) out[k]=obj[k]; });
   if (!Array.isArray(out.investors)) out.investors = DEFAULTS.investors;
   if (!out.checks || typeof out.checks!=="object") out.checks = {};
+  // plans saved before "borrows with" existed: Jordy and Bonnie borrow together unless someone has since split them
+  if (!out.investors.some(x=>x && x.jointWith!==undefined)){
+    const names = out.investors.map(x=>((x&&x.name)||"").trim().toLowerCase());
+    const j = names.indexOf("jordy"), b = names.indexOf("bonnie");
+    if (j>=0 && b>=0) out.investors = out.investors.map((x,i)=> i===j ? {...x, jointWith:b} : i===b ? {...x, jointWith:j} : {...x, jointWith:-1});
+  }
   return out;
 }
 const planKey = p => JSON.stringify(mergePlan(p));
@@ -779,10 +806,12 @@ function App(){
   const applyPlan = (plan, key) => { setP(plan); sync.current.dirty=false; setPending(null); if (key) markSeen(key); toast("Shared plan loaded"); };
   const set = (k,v)=>change(o=>({...o,[k]:v}));
   const setCheck = (k,v)=>change(o=>({...o, checks:{...(o.checks||{}), [k]:v}}));
-  const setInv = (i,k,v)=>change(o=>{ const a=[...(o.investors||[])]; while(a.length<=i) a.push({name:`Investor ${a.length+1}`,share:0,rate:"",tax:"",fund:"loan"}); a[i]={...a[i],[k]:v}; return {...o,investors:a}; });
+  const blankInv = (n, share) => ({ name:`Investor ${n}`, share, rate:"", tax:"", fund:"loan", jointWith:-1 });
+  const setInv = (i,k,v)=>change(o=>{ const a=[...(o.investors||[])]; while(a.length<=i) a.push(blankInv(a.length+1, 0)); a[i]={...a[i],[k]:v}; return {...o,investors:a}; });
+  const setInvMany = (ids,k,v)=>change(o=>{ const a=[...(o.investors||[])]; ids.forEach(i=>{ while(a.length<=i) a.push(blankInv(a.length+1, 0)); a[i]={...a[i],[k]:v}; }); return {...o,investors:a}; });
   const setCount = c => change(o=>{
     c = clamp(c,1,10);
-    const a=[...(o.investors||[])]; while(a.length<c) a.push({name:`Investor ${a.length+1}`,share:Math.round(100/c),rate:"",tax:"",fund:"loan"});
+    const a=[...(o.investors||[])]; while(a.length<c) a.push(blankInv(a.length+1, Math.round(100/c)));
     return {...o, investorCount:c, investors:a, builder: clamp(num(o.builder),0,c-1)};
   });
 
@@ -888,13 +917,14 @@ function App(){
   const rentUnit = isRooms(p) ? "per room a week" : "a week";
   const multi = R.inv.length > 1;
   const B = R.builder;
-  const undecided = R.inv.filter(x=>x.fund==="undecided");
-  const viewInv = view==="all" ? null : (R.inv[+view]||R.inv[0]);
+  const undecided = R.groups.filter(g=>g.fund==="undecided");
+  const viewInv = view==="all" ? null : view.startsWith("g:") ? R.groups[+view.slice(2)] : view.startsWith("i:") ? R.inv[+view.slice(2)] : null;
   const viewRows = viewInv ? viewInv.rows : R.rows;
   const Y = R.Y;
 
   const decisions = [
-    ...undecided.map(x=>({ id:`fund-${x.i}`, label:`How is ${x.name} paying for their ${(x.s*100).toFixed(0)}%?`, hint:`The numbers assume a bank loan for now. Pick Bank loan, Own cash or Owes ${B.name} on the People tab.` })),
+    ...undecided.map(g=>({ id:`fund-${g.i}`, label:`How ${g.joint?"are":"is"} ${g.name} paying for their ${(g.s*100).toFixed(0)}%?`, hint:`The numbers assume a bank loan for now. Pick Bank loan, Own cash or Owes ${B.name} on the People tab.` })),
+    ...R.groups.filter(g=>g.joint && g.loan0>0).map(g=>({ id:`joint-${g.i}`, label:`${g.name}: one bank loan in both names`, hint:`Both go on the loan and each is liable for all of it. For tax, each claims the interest on their own ${g.members.map(m=>(m.s*100).toFixed(0)+"%").join(" and ")} share.` })),
     R.owers.length>0 && { id:"loan-agreement", label:`Written loan agreement between ${B.name} and ${R.owers.map(x=>x.name).join(" and ")}`, hint:`${money(R.fronted)} fronted, paid back over ${R.tl.bootsYears} years at ${num(p.bootsRate)}%. Put the amount, rate, repayments and what happens if someone sells in writing.` },
     { id:"co-own", label:"Co-ownership agreement for all four", hint:"Who decides what, how someone exits, what happens if one person can't pay, how profits and losses are split. Tenants in common lets each person claim their own share of the loss." },
     num(p.bootsFee)===0 && { id:"boots-fee", label:`${B.name} builds at cost with no fee. Is everyone happy with that?`, hint:`The group saves about ${money(R.saving)} against an outside builder. Decide if ${B.name} gets paid for his time or a bigger share.` },
@@ -955,7 +985,7 @@ function App(){
           <div className="hero">
             <div className="pills">
               <span className={"pill "+(good?"good":"bad")}>{good ? "Makes money" : "Loses money"}</span>
-              {undecided.map(x=><span key={x.i} className="pill warn">{x.name}'s funding not decided</span>)}
+              {undecided.map(g=><span key={g.i} className="pill warn">{g.name}: funding not decided</span>)}
               {R.owers.length>0 && <span className="pill info">{B.name} fronts {money(R.fronted)} of the build</span>}
             </div>
             <div className={"big "+cls(R.profit)}>{signed(R.profit)}</div>
@@ -1004,11 +1034,11 @@ function App(){
         </div>
 
         <div className="stack">
-          {multi && <Group title="Each person" right={<span>Cash in · Per week</span>} footer="Per week is year 1 after tax, after bank and builder repayments.">
-            {R.inv.map(iv=>(
-              <Val key={iv.i} label={<span className="namerow"><span>{iv.name}</span><span className={"pill "+(iv.fund==="undecided"?"warn":iv.fund==="boots"?"info":"grey")}>{iv.isBuilder?"Builder":iv.fund==="boots"?`Owes ${B.name}`:FUND[iv.fund]}</span></span>}
-                   hint={`${(iv.s*100).toFixed(0)}% share${iv.loan0>0?` · bank loan ${money(iv.loan)}`:""}${iv.debt0>0?` · owes ${money(iv.debt0)}`:""}`}
-                   value={<>{money(iv.cashIn)} · <span className={cls(iv.rows[0].after)}>{money(iv.rows[0].after/52)}</span></>}/>
+          {multi && <Group title="Each person" right={<span>Cash in · Per week</span>} footer="Per week is year 1 after tax, after bank and builder repayments. People borrowing together are shown as one.">
+            {R.groups.map(g=>(
+              <Val key={g.i} label={<span className="namerow"><span>{g.name}</span><span className={"pill "+(g.fund==="undecided"?"warn":g.fund==="boots"?"info":"grey")}>{g.isBuilder?"Builder":g.fund==="boots"?`Owe${g.joint?"":"s"} ${B.name}`:FUND[g.fund]}</span>{g.joint && <span className="pill grey">One loan</span>}</span>}
+                   hint={`${(g.s*100).toFixed(0)}% share${g.loan0>0?` · bank loan ${money(g.loan)}`:""}${g.debt0>0?` · owe${g.joint?"":"s"} ${money(g.debt0)}`:""}`}
+                   value={<>{money(g.cashIn)} · <span className={cls(g.rows[0].after)}>{money(g.rows[0].after/52)}</span></>}/>
             ))}
           </Group>}
 
@@ -1077,50 +1107,58 @@ function App(){
           <Group title={`Paying ${B.name} back`} footer={`${B.name} pays for the build share of anyone set to "Owes ${B.name}", then they pay him back weekly. ${R.owers.length>0?`Right now that's ${R.owers.map(x=>x.name).join(" and ")}, ${money(R.fronted)} in total.`:"Nobody owes him right now."}`}>
             <NumRow id="bootsYears" label="Pay back over" unit="yrs" value={p.bootsYears} onChange={v=>set("bootsYears",v)}/>
             <NumRow id="bootsRate" label={`Interest ${B.name} charges`} unit="%" hint="0 is a straight loan with no interest" value={p.bootsRate} onChange={v=>set("bootsRate",v)}/>
-            {R.owers.map(x=><Val key={x.i} label={`${x.name} pays ${B.name}`} hint={`${money(x.debt0)} over ${R.tl.bootsYears} years`} value={money(x.weeklyBoots)+" a week"}/>)}
+            {R.groups.filter(g=>g.owes).map(g=><Val key={g.i} label={`${g.name} pay${g.joint?"":"s"} ${B.name}`} hint={`${money(g.debt0)} over ${R.tl.bootsYears} years`} value={money(g.weeklyBoots)+" a week"}/>)}
             {R.owers.length>0 && <Val label={`${B.name} gets back`} value={money(B.weeklyRecv)+" a week"} strong/>}
           </Group>
         </div>
 
         <div className="invgrid">
-          {R.inv.map(iv=>{
-            const src = (p.investors||[])[iv.i] || {};
-            const r1 = iv.rows[0];
-            const fundOpts = [["loan","Bank loan"], ...(iv.isBuilder?[]:[["boots",`Owes ${B.name}`]]), ["cash","Own cash"], ["undecided","Not decided"]];
+          {R.groups.map(g=>{
+            const ids = g.members.map(m=>m.i);
+            const lead = g.members[0];
+            const leadSrc = (p.investors||[])[lead.i] || {};
+            const r1 = g.rows[0];
+            const fundOpts = [["loan","Bank loan"], ...(g.isBuilder?[]:[["boots",`Owe${g.joint?"":"s"} ${B.name}`]]), ["cash","Own cash"], ["undecided","Not decided"]];
+            const others = R.inv.filter(x=>x.i!==lead.i);
             return (
-              <div className="stack" key={iv.i}>
-                <Group title={<span className="namerow"><span>{iv.name}</span>{iv.isBuilder && <span className="pill info">Builder</span>}</span>} right={<span>{(iv.s*100).toFixed(1)}%</span>}
-                  footer={iv.fund==="undecided" ? `${iv.name} hasn't settled how they're paying. The maths uses a bank loan until you pick.` : iv.fund==="cash" ? "No bank loan. They put their whole share in as cash." : null} warn={iv.fund==="undecided"}>
-                  <NumRow id={`n${iv.i}`} text label="Name" value={src.name ?? iv.name} onChange={v=>setInv(iv.i,"name",v)}/>
-                  {p.splitMode==="custom"
-                    ? <NumRow id={`s${iv.i}`} label="Share" unit="%" value={src.share ?? ""} onChange={v=>setInv(iv.i,"share",v)}/>
-                    : <Val label="Share" value={(iv.s*100).toFixed(1)+"%"}/>}
-                  <SegRow label="How they pay for their share" options={fundOpts} value={iv.fund} onChange={v=>setInv(iv.i,"fund",v)}/>
-                  <NumRow id={`r${iv.i}`} label="Bank interest rate" unit="%" value={src.rate ?? ""} placeholder={String(p.rate)} onChange={v=>setInv(iv.i,"rate",v)}/>
-                  <NumRow id={`t${iv.i}`} label="Tax rate" unit="%" hint="Their marginal rate incl Medicare" value={src.tax ?? ""} placeholder={String(p.taxRate)} onChange={v=>setInv(iv.i,"tax",v)}/>
+              <div className="stack" key={g.i}>
+                <Group title={<span className="namerow"><span>{g.name}</span>{g.isBuilder && <span className="pill info">Builder</span>}{g.joint && <span className="pill grey">One loan together</span>}</span>} right={<span>{(g.s*100).toFixed(1)}%</span>}
+                  footer={g.fund==="undecided" ? `${g.name} ${g.joint?"haven't":"hasn't"} settled how they're paying. The maths uses a bank loan until you pick.` : g.fund==="cash" ? `No bank loan. ${g.joint?"They put their":"Puts the"} whole share in as cash.` : g.joint ? "One bank loan in both names. Each person still claims their own share of the interest and the loss for tax." : null} warn={g.fund==="undecided"}>
+                  {g.members.map(iv=>{ const src=(p.investors||[])[iv.i]||{}; return (<React.Fragment key={iv.i}>
+                    <NumRow id={`n${iv.i}`} text label="Name" value={src.name ?? iv.name} onChange={v=>setInv(iv.i,"name",v)}/>
+                    {p.splitMode==="custom"
+                      ? <NumRow id={`s${iv.i}`} label={g.joint?`${iv.name}'s share`:"Share"} unit="%" value={src.share ?? ""} onChange={v=>setInv(iv.i,"share",v)}/>
+                      : <Val label={g.joint?`${iv.name}'s share`:"Share"} value={(iv.s*100).toFixed(1)+"%"}/>}
+                    <NumRow id={`t${iv.i}`} label={g.joint?`${iv.name}'s tax rate`:"Tax rate"} unit="%" hint="Marginal rate incl Medicare" value={src.tax ?? ""} placeholder={String(p.taxRate)} onChange={v=>setInv(iv.i,"tax",v)}/>
+                  </React.Fragment>); })}
+                  <SegRow label="How they pay for their share" options={fundOpts} value={g.fund} onChange={v=>setInvMany(ids,"fund",v)}/>
+                  <NumRow id={`r${lead.i}`} label="Bank interest rate" unit="%" value={leadSrc.rate ?? ""} placeholder={String(p.rate)} onChange={v=>setInvMany(ids,"rate",v)}/>
+                  {g.joint
+                    ? <div className="row"><span className="lbl">Borrowing together<span className="hint">Change this if they'd each take their own loan</span></span><button type="button" className="hbtn plain" onClick={()=>setInvMany(ids,"jointWith",-1)}>Split up</button></div>
+                    : others.length>0 && <SelectRow id={`j${lead.i}`} label="Borrows with" hint="Pick someone to share one bank loan and one payback" options={[["-1","Nobody"], ...others.map(x=>[String(x.i), x.name])]} value="-1" onChange={v=>setInv(lead.i,"jointWith",v)}/>}
                 </Group>
                 <Group title="Their money up front">
-                  <Val label="Share of all costs" value={money(iv.s*R.totalCost)}/>
-                  <Val label="Bank loan" value={money(iv.loan0)}/>
-                  {iv.loan0!==iv.loan && <Val label="Bank loan after lot sale" value={money(iv.loan)}/>}
-                  {iv.debt0>0 && <Val label={`Owes ${B.name} for the build`} value={money(iv.debt0)}/>}
-                  {iv.isBuilder && iv.fronted>0 && <Val label="Fronts for others" value={money(iv.fronted)} c="warnc"/>}
-                  <Val label="Cash to put in" hint="Own share, interest while building, less loans and lot sale money" value={money(iv.cashIn)} strong/>
+                  <Val label="Share of all costs" value={money(g.s*R.totalCost)}/>
+                  <Val label={g.joint?"One bank loan together":"Bank loan"} value={money(g.loan0)}/>
+                  {g.loan0!==g.loan && <Val label="Bank loan after lot sale" value={money(g.loan)}/>}
+                  {g.debt0>0 && <Val label={`Owe${g.joint?"":"s"} ${B.name} for the build`} value={money(g.debt0)}/>}
+                  {g.isBuilder && g.fronted>0 && <Val label="Fronts for others" value={money(g.fronted)} c="warnc"/>}
+                  <Val label="Cash to put in" hint="Own share, interest while building, less loans and lot sale money" value={money(g.cashIn)} strong/>
                 </Group>
                 <Group title="Their money each week, year 1">
                   <Val label="Rent share" value={money(r1.rent/52)} c="pos"/>
                   <Val label="Costs share" value={money(-r1.costs/52)}/>
-                  {iv.loan>0 && <Val label={`Bank repayment at ${iv.rPct.toFixed(2)}%`} hint={`${money(iv.weeklyRepay*52/12)} a month`} value={money(-iv.weeklyRepay)}/>}
-                  {iv.debt0>0 && <Val label={`Repayment to ${B.name}`} value={money(-iv.weeklyBoots)}/>}
-                  {iv.isBuilder && iv.fronted>0 && <Val label="Repayments from others" value={signed(iv.weeklyRecv)} c="pos"/>}
-                  <Val label="Tax back" value={signed(r1.taxBack/52)} c={cls(r1.taxBack)}/>
+                  {g.loan>0 && <Val label={`Bank repayment at ${g.rPct.toFixed(2)}%`} hint={`${money(g.weeklyRepay*52/12)} a month`} value={money(-g.weeklyRepay)}/>}
+                  {g.debt0>0 && <Val label={`Repayment to ${B.name}`} hint={`${money(g.weeklyBoots*52/12)} a month`} value={money(-g.weeklyBoots)}/>}
+                  {g.isBuilder && g.fronted>0 && <Val label="Repayments from others" value={signed(g.weeklyRecv)} c="pos"/>}
+                  <Val label="Tax back" hint={g.joint?"Both people's refunds added up":null} value={signed(r1.taxBack/52)} c={cls(r1.taxBack)}/>
                   <Val label="In pocket" value={money(r1.after/52)} c={cls(r1.after)} strong/>
                 </Group>
                 <Group title={`Where they land in year ${Y}`}>
-                  <Val label="Equity" hint={iv.isBuilder&&iv.fronted>0?"Includes what others still owe him":iv.debt0>0?`After what's still owed to ${B.name}`:null} value={money(iv.rows[Y-1].equity)}/>
-                  <Val label="Cash if sold" value={money(iv.saleNet)}/>
-                  <Val label="Profit" value={signed(iv.profit)} c={cls(iv.profit)} strong/>
-                  <Val label="Return a year on their cash" value={pct(iv.irr)}/>
+                  <Val label="Equity" hint={g.isBuilder&&g.fronted>0?"Includes what others still owe him":g.debt0>0?`After what's still owed to ${B.name}`:null} value={money(g.rows[Y-1].equity)}/>
+                  <Val label="Cash if sold" value={money(g.saleNet)}/>
+                  <Val label="Profit" value={signed(g.profit)} c={cls(g.profit)} strong/>
+                  <Val label="Return a year on their cash" value={pct(g.irr)}/>
                 </Group>
               </div>
             );
@@ -1167,7 +1205,7 @@ function App(){
           <div className="ghead"><span>Who pays what, and when</span></div>
           <div className="tablebox">
             <table className="stages">
-              <thead><tr><th>Stage</th><th>When</th>{R.inv.map(iv=><th key={iv.i}>{iv.name}</th>)}<th>Total</th></tr></thead>
+              <thead><tr><th>Stage</th><th>When</th>{R.groups.map(g=><th key={g.i}>{g.name}</th>)}<th>Total</th></tr></thead>
               <tbody>
                 {[
                   { k:"settle", label:"Settlement", hint:"Deposit on land, stamp duty, loan fees", at:R.tl.settleAt, val:iv=>iv.stages.settle, tot:R.stageTotals.settle },
@@ -1182,11 +1220,11 @@ function App(){
                   <tr key={r.k} className={r.muted?"muted":""}>
                     <td><div>{r.label}</div><div className="hint">{r.hint}</div></td>
                     <td>{monthLabel(p.startMonth,r.at)}</td>
-                    {R.inv.map(iv=>{ const v=r.val(iv); return <td key={iv.i} className={!r.muted&&v<0?"pos":""}>{money(v)}</td>; })}
+                    {R.groups.map(g=>{ const v=r.val(g); return <td key={g.i} className={!r.muted&&v<0?"pos":""}>{money(v)}</td>; })}
                     <td className={!r.muted&&r.tot<0?"pos":""}>{money(r.tot)}</td>
                   </tr>
                 ))}
-                <tr className="total"><td>Total cash in</td><td></td>{R.inv.map(iv=><td key={iv.i}>{money(iv.cashIn)}</td>)}<td>{money(R.cashIn)}</td></tr>
+                <tr className="total"><td>Total cash in</td><td></td>{R.groups.map(g=><td key={g.i}>{money(g.cashIn)}</td>)}<td>{money(R.cashIn)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -1202,7 +1240,7 @@ function App(){
 
       {tab==="years" && <div className="stack">
         {multi && <Group>
-          <SelectRow id="view" label="Show" options={[["all","Whole property"], ...R.inv.map(iv=>[String(iv.i), iv.name])]} value={view} onChange={setView}/>
+          <SelectRow id="view" label="Show" options={[["all","Whole property"], ...R.groups.flatMap(g=>[["g:"+g.gi, g.name], ...(g.joint ? g.members.map(m=>["i:"+m.i, m.name+" only"]) : [])])]} value={viewInv ? view : "all"} onChange={setView}/>
         </Group>}
         <YearTable rows={viewRows} pi={p.loanType==="pi"} showBoots={!!(viewInv && viewInv.debt0>0)} showRecv={!!(viewInv && viewInv.isBuilder && viewInv.fronted>0)}/>
         <Group title={`If sold in year ${Y}`}>
