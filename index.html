@@ -42,8 +42,16 @@ h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0
 .seg button{font-size:13px;padding:6px 10px}
 .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
 @media (min-width:900px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
-.stack{display:grid;gap:22px;min-width:0}
-.gwrap{display:grid;gap:6px;min-width:0}
+.stack{display:grid;gap:22px;min-width:0;align-content:start}
+.gwrap{display:grid;gap:6px;min-width:0;align-content:start}
+.invgrid{align-items:start}
+.person{background:rgba(118,118,128,.09);border-radius:18px;padding:12px;display:grid;gap:16px;align-content:start;min-width:0}
+.phead{display:flex;align-items:center;gap:10px;padding:4px 6px 0;flex-wrap:wrap}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--pc);color:#fff;display:grid;place-items:center;font:700 15px var(--title);letter-spacing:.02em;flex-shrink:0}
+.pname{font:700 22px var(--title);letter-spacing:-.01em;color:var(--label)}
+.pshare{margin-left:auto;font:600 15px var(--title);color:var(--sec)}
+.subhead{padding:12px 16px 4px;font:600 12px var(--font);letter-spacing:.05em;text-transform:uppercase;color:var(--pc);position:relative}
+.row+.subhead::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
 .ghead{font-size:13px;color:var(--sec);text-transform:uppercase;letter-spacing:.03em;padding:0 16px;display:flex;justify-content:space-between;gap:8px;font-weight:500}
 .gfoot{font-size:13px;color:var(--sec);padding:0 16px;line-height:1.4}
 .gfoot.warn{color:var(--orange)}
@@ -442,6 +450,7 @@ function monthLabel(startMonth, m){
 }
 const UNITS = { mths:"mth", yrs:"yr", lots:"lot", rooms:"room", wks:"wk" };
 const FUND = { loan:"Bank loan", boots:"Owes builder", cash:"Own cash", undecided:"Not decided" };
+const PCOLORS = ["#007aff","#34c759","#ff9500","#af52de","#ff2d55","#5ac8fa","#a2845e","#8e8e93","#ffcc00","#30b0c7"];
 
 // ==== SHARING AND SYNC ====
 const KEY = "qld-build-lease-v4";
@@ -461,7 +470,7 @@ function mergePlan(obj){
       if (j>=0 && b>=0) out.investors = out.investors.map((x,i)=> i===j ? {...x, jointWith:b} : i===b ? {...x, jointWith:j} : {...x, jointWith:-1});
     }
     const jo = names.indexOf("joel");
-    if (jo>=0 && out.investors[jo] && out.investors[jo].fund==="undecided") out.investors = out.investors.map((x,i)=> i===jo ? {...x, fund:"boots", payback:"undecided"} : x);
+    if (jo>=0 && out.investors[jo] && !out.investors[jo].payback && ["undecided","cash"].includes(out.investors[jo].fund)) out.investors = out.investors.map((x,i)=> i===jo ? {...x, fund:"boots", payback:"undecided"} : x);
     out.schema = 2;
   }
   return out;
@@ -1159,16 +1168,27 @@ function App(){
             const fundOpts = [["loan","Bank loan"], ...(g.isBuilder?[]:[["boots",`Owe${g.joint?"":"s"} ${B.name}`]]), ["cash","Own cash"], ["undecided","Not decided"]];
             const others = R.inv.filter(x=>x.i!==lead.i);
             return (
-              <div className="stack" key={g.i}>
-                <Group title={<span className="namerow"><span>{g.name}</span>{g.isBuilder && <span className="pill info">Builder</span>}{g.joint && <span className="pill grey">One loan together</span>}</span>} right={<span>{(g.s*100).toFixed(1)}%</span>}
+              <div className="person" key={g.i} style={{"--pc": PCOLORS[g.i % PCOLORS.length]}}>
+                <div className="phead">
+                  <span className="avatar" aria-hidden="true">{g.members.map(m=>(m.name||"?").trim().charAt(0).toUpperCase()).join("")}</span>
+                  <span className="pname">{g.name}</span>
+                  {g.isBuilder && <span className="pill info">Builder</span>}
+                  {g.joint && <span className="pill grey">One loan together</span>}
+                  {g.fund==="undecided" && <span className="pill warn">Funding not decided</span>}
+                  {g.owes && g.pb==="undecided" && <span className="pill warn">Payback not decided</span>}
+                  <span className="pshare">{(g.s*100).toFixed(1)}%</span>
+                </div>
+                <Group
                   footer={g.fund==="undecided" ? `${g.name} ${g.joint?"haven't":"hasn't"} settled how they're paying. The maths uses a bank loan until you pick.` : g.owes && g.pb==="undecided" ? `${B.name} fronts ${g.joint?"their":"the"} ${money(g.debt0)} build share. How it gets paid back isn't decided yet, so weekly is assumed.` : g.fund==="cash" ? `No bank loan. ${g.joint?"They put their":"Puts the"} whole share in as cash.` : g.joint ? "One bank loan in both names. Each person still claims their own share of the interest and the loss for tax." : null} warn={g.fund==="undecided" || (g.owes && g.pb==="undecided")}>
                   {g.members.map(iv=>{ const src=(p.investors||[])[iv.i]||{}; return (<React.Fragment key={iv.i}>
+                    {g.joint && <div className="subhead">{iv.name}</div>}
                     <NumRow id={`n${iv.i}`} text label="Name" value={src.name ?? iv.name} onChange={v=>setInv(iv.i,"name",v)}/>
                     {p.splitMode==="custom"
-                      ? <NumRow id={`s${iv.i}`} label={g.joint?`${iv.name}'s share`:"Share"} unit="%" value={src.share ?? ""} onChange={v=>setInv(iv.i,"share",v)}/>
-                      : <Val label={g.joint?`${iv.name}'s share`:"Share"} value={(iv.s*100).toFixed(1)+"%"}/>}
-                    <NumRow id={`t${iv.i}`} label={g.joint?`${iv.name}'s tax rate`:"Tax rate"} unit="%" hint="Marginal rate incl Medicare" value={src.tax ?? ""} placeholder={String(p.taxRate)} onChange={v=>setInv(iv.i,"tax",v)}/>
+                      ? <NumRow id={`s${iv.i}`} label="Share" unit="%" value={src.share ?? ""} onChange={v=>setInv(iv.i,"share",v)}/>
+                      : <Val label="Share" value={(iv.s*100).toFixed(1)+"%"}/>}
+                    <NumRow id={`t${iv.i}`} label="Tax rate" unit="%" hint="Marginal rate incl Medicare" value={src.tax ?? ""} placeholder={String(p.taxRate)} onChange={v=>setInv(iv.i,"tax",v)}/>
                   </React.Fragment>); })}
+                  {g.joint && <div className="subhead">Together</div>}
                   <SegRow label="How they pay for their share" options={fundOpts} value={g.fund} onChange={v=>setInvMany(ids,"fund",v)}/>
                   {g.fund==="boots" && <SegRow label={`How they pay ${B.name} back`} hint={g.pb==="undecided"?`Not decided yet. Weekly over ${R.tl.bootsYears} years is assumed in the maths until you pick`:g.pb==="weekly"?`Weekly over ${R.tl.bootsYears} years at ${num(p.bootsRate)}%. Change the terms under Paying ${B.name} back`:g.pb==="cash"?"Pay him in full when the build finishes":g.pb==="sale"?`He's paid out of the sale in year ${Y}${num(p.bootsRate)>0?`, with ${num(p.bootsRate)}% interest along the way`:", nothing until then"}`:"Borrow it from the bank once it's built and valued, then pay the bank"} options={[["weekly","Weekly"],["cash","Cash when built"],["sale","From the sale"],["refinance","New bank loan"],["undecided","Not decided"]]} value={g.pb} onChange={v=>setInvMany(ids,"payback",v)}/>}
                   <NumRow id={`r${lead.i}`} label="Bank interest rate" unit="%" value={leadSrc.rate ?? ""} placeholder={String(p.rate)} onChange={v=>setInvMany(ids,"rate",v)}/>
