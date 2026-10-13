@@ -20,12 +20,22 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--label);font-family:var(--font);font-size:16px;line-height:1.4;padding:20px 16px 120px;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 .wrap{max-width:1100px;margin:0 auto;display:grid;gap:20px}
-header{display:grid;gap:4px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.htext{display:grid;gap:4px;min-width:0}
+.hside{display:flex;align-items:center;gap:8px;padding-bottom:4px}
+.hbtn{border:0;background:var(--blue);color:#fff;font:600 14px var(--font);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.hbtn.plain{background:var(--seg);color:var(--label)}
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--label);color:var(--card);font:500 14px var(--font);padding:10px 16px;border-radius:999px;z-index:20;box-shadow:0 4px 16px rgba(0,0,0,.18);max-width:calc(100% - 32px);text-align:center}
+.banner{background:var(--card);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid color-mix(in srgb,var(--blue) 35%,transparent)}
+.banner .lbl{flex:1 1 240px}
+.bbtns{display:flex;gap:8px;flex-wrap:wrap}
+.copybox{width:100%;margin-top:8px;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid var(--sep);border-radius:8px;padding:8px;color:var(--label);background:var(--bg);resize:vertical}
 .eyebrow{font-size:13px;font-weight:600;color:var(--sec);letter-spacing:.02em}
 h1,.big,.tile .v,.bar .m b,.ghead,.val.strong,.hero .sub{font-family:var(--title)}
 h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0;line-height:1.1;text-wrap:balance}
-.tabwrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
-.tabs{display:grid;grid-template-columns:repeat(6,minmax(84px,1fr));background:var(--seg);border-radius:10px;padding:2px;max-width:720px;min-width:520px}
+.tabwrap{min-width:0}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:var(--seg);border-radius:10px;padding:2px;max-width:720px}
+@media (max-width:560px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:2px}}
 .tabs button,.seg button{border:0;background:transparent;color:var(--label);font:500 14px var(--font);padding:7px 6px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .tabs button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--segOn);box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);font-weight:600}
 .seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--seg);border-radius:9px;padding:2px;flex-shrink:0}
@@ -57,7 +67,7 @@ input[type=number]{-moz-appearance:textfield}
 .pos{color:var(--green)!important} .neg{color:var(--red)!important} .warnc{color:var(--orange)!important}
 .hero{background:var(--card);border-radius:16px;padding:20px;display:grid;gap:6px}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
-.pill{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;text-transform:none;letter-spacing:0;font-family:var(--font)}
 .pill.good{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
 .pill.bad{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
 .pill.warn{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
@@ -65,12 +75,13 @@ input[type=number]{-moz-appearance:textfield}
 .pill.grey{background:var(--seg);color:var(--sec)}
 .big{font-size:clamp(36px,8vw,48px);font-weight:700;letter-spacing:-.025em;line-height:1.05}
 .hero p{margin:0;color:var(--sec);font-size:15px;max-width:56ch}
-.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (min-width:900px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .tile{background:var(--card);border-radius:12px;padding:12px 14px;display:grid;gap:2px;min-width:0}
 .tile .k{font-size:12.5px;color:var(--sec)}
-.tile .v{font-size:20px;font-weight:600;letter-spacing:-.01em;overflow-wrap:anywhere}
+.tile .v{font-size:20px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden}
+.namerow{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
 .chartbox{background:var(--card);border-radius:12px;padding:14px 12px 8px;overflow-x:auto}
+.chartbox svg{margin:0 auto}
 svg text{fill:var(--sec);font-family:var(--font);font-size:11px}
 .tablebox{background:var(--card);border-radius:12px;overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:14px;white-space:nowrap}
@@ -79,7 +90,10 @@ th{font-size:12px;font-weight:600;color:var(--sec);text-transform:uppercase;lett
 td{border-bottom:.5px solid var(--sep)}
 tr:last-child td{border-bottom:0}
 tr.total td{font-weight:600;color:var(--label)}
-th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
+tr.muted td{color:var(--sec)}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:1}
+table.stages td:first-child{white-space:normal;min-width:170px;max-width:230px;line-height:1.3}
+table.stages td:first-child .hint{margin-top:2px}
 .invgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 @media (min-width:900px){.invgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .stepper{display:inline-grid;grid-template-columns:36px 36px 36px;align-items:center;background:var(--seg);border-radius:9px;overflow:hidden}
@@ -104,7 +118,7 @@ th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:
 .bar .m span{font-size:12px;color:var(--sec)}
 .bar .m b{font-size:18px;font-weight:600;letter-spacing:-.01em}
 button:focus-visible,select:focus-visible,.check input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-@media (max-width:520px){.inp input{width:96px}.inp input.name{width:130px}.tabs button{font-size:13px}.row.wrapme .seg{width:100%}.seg button{padding:6px 6px;font-size:12.5px}}
+@media (max-width:520px){body{padding-bottom:150px}.inp input{width:96px}.inp input.name{width:130px}.tabs button{font-size:13px}.row.wrapme .seg{width:100%}.seg button{padding:6px 6px;font-size:12.5px}.bar .in{gap:8px 16px}.bar .m b{font-size:16px}.val{max-width:55%;white-space:normal}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -373,13 +387,41 @@ const signed = v => (v>0?"+":"") + money(v);
 const cls = v => v<0 ? "neg" : "pos";
 const pct = v => v===null || v===undefined ? "n/a" : (v*100).toFixed(1)+"%";
 const mths = m => { const r = Math.round(m*2)/2; return r + (r===1 ? " month" : " months"); };
+const axisMoney = v => v>=1e6 ? "$"+(v/1e6).toFixed(v%1e6?1:0)+"m" : "$"+Math.round(v/1e3)+"k";
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function monthLabel(startMonth, m){
   const parts = String(startMonth||"2026-11").split("-").map(Number);
   const y = parts[0]||2026, mo = (parts[1]||1)-1;
   const d = new Date(y, mo + Math.round(m), 1);
-  return d.toLocaleString("en-AU",{month:"short"}) + " " + String(d.getFullYear()).slice(2);
+  return MONTHS[d.getMonth()] + " " + String(d.getFullYear()).slice(2);
 }
+const UNITS = { mths:"mth", yrs:"yr", lots:"lot", rooms:"room", wks:"wk" };
 const FUND = { loan:"Bank loan", boots:"Owes builder", cash:"Own cash", undecided:"Not decided" };
+
+// ==== SHARING AND SYNC ====
+const KEY = "qld-build-lease-v4";
+const b64u = s => { const bytes = new TextEncoder().encode(s); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); };
+const unb64u = s => { const t = s.replace(/-/g,"+").replace(/_/g,"/"); const bin = atob(t + "=".repeat((4 - t.length%4)%4)); return new TextDecoder().decode(Uint8Array.from(bin, c=>c.charCodeAt(0))); };
+function mergePlan(obj){
+  const out = {...DEFAULTS};
+  if (obj && typeof obj==="object") Object.keys(DEFAULTS).forEach(k=>{ if (obj[k]!==undefined) out[k]=obj[k]; });
+  if (!Array.isArray(out.investors)) out.investors = DEFAULTS.investors;
+  if (!out.checks || typeof out.checks!=="object") out.checks = {};
+  return out;
+}
+const planKey = p => JSON.stringify(mergePlan(p));
+function diffPlan(p){ const d={}; Object.keys(DEFAULTS).forEach(k=>{ if (JSON.stringify(p[k])!==JSON.stringify(DEFAULTS[k])) d[k]=p[k]; }); return d; }
+function readHashPlan(){
+  const h = (typeof location!=="undefined" && location.hash) || "";
+  if (!h.startsWith("#plan-")) return null;
+  try { return mergePlan(JSON.parse(unb64u(h.slice(6)))); } catch(e){ return null; }
+}
+const HASH_PLAN = readHashPlan();
+let LOCAL_PLAN = null; try { const s = JSON.parse(localStorage.getItem(KEY)||"null"); if (s) LOCAL_PLAN = mergePlan(s); } catch(e){}
+const INITIAL = HASH_PLAN || LOCAL_PLAN || DEFAULTS;
+const HAD_LOCAL = !!(HASH_PLAN || LOCAL_PLAN);
+if (HASH_PLAN) { try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} }
+const IN_VIEWER = typeof window!=="undefined" && !!(window.claude && typeof window.claude.use==="function");
 
 function Group({title, right, footer, warn, children}){
   return (
@@ -392,7 +434,8 @@ function Group({title, right, footer, warn, children}){
 }
 function NumRow({id,label,hint,unit,value,onChange,placeholder,text,month}){
   const pre = unit && unit.startsWith("$");
-  const post = unit==="$" ? "" : unit && unit.startsWith("$") ? unit.slice(1) : unit;
+  let post = unit==="$" ? "" : unit && unit.startsWith("$") ? unit.slice(1) : unit;
+  if (post && UNITS[post] && Number(value)===1) post = UNITS[post];
   return (
     <label className="row" htmlFor={id}>
       <span className="lbl">{label}{hint && <span className="hint">{hint}</span>}</span>
@@ -435,6 +478,9 @@ function Val({label,hint,value,c,strong}){
     </div>
   );
 }
+function Note({label,text}){
+  return <div className="src"><b>{label}</b><span>{text}</span></div>;
+}
 function Check({id,label,hint,checked,onChange}){
   return (
     <label className="check" htmlFor={id}>
@@ -452,10 +498,10 @@ function Chart({rows, cashIn}){
   const y = v => T + (H-T-B) * (1 - Math.max(0,v)/(tick*3));
   const bw = (W-L-8)/10;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:380,display:"block"}} role="img" aria-label="Equity each year">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:720,minWidth:380,display:"block"}} role="img" aria-label="Equity each year">
       {[0,1,2,3].map(i=>(<g key={i}>
         <line x1={L} x2={W-4} y1={y(tick*i)} y2={y(tick*i)} stroke="var(--sep)" />
-        <text x={L-8} y={y(tick*i)+4} textAnchor="end">{"$"+Math.round(tick*i/1000)+"k"}</text>
+        <text x={L-8} y={y(tick*i)+4} textAnchor="end">{axisMoney(tick*i)}</text>
       </g>))}
       {rows.map((r,i)=>(<g key={r.y}>
         <rect x={L+i*bw+6} y={y(r.equity)} width={bw-12} height={Math.max(0,y(0)-y(r.equity))} rx="5" fill="var(--blue)" opacity={i===9?1:0.55} />
@@ -478,26 +524,30 @@ function Gantt({tl, startMonth}){
     { label:"Furnish, find tenants", a:tl.buildEnd, b:tl.rentStart, c:"var(--blue)" },
   ].filter(Boolean);
   const total = Math.max(6, Math.ceil(tl.rentStart) + 1);
-  const W=640, L=150, rowH=34, T=30, B=8, H=T+stages.length*rowH+B;
-  const x = m => L + (W-L-14)*m/total;
-  const step = total<=14 ? 1 : total<=30 ? 2 : 3;
+  const W=640, L=150, rowH=34, T=30, B=22, H=T+stages.length*rowH+B;
+  const x = m => L + (W-L-36)*m/total;
+  const step = Math.max(1, Math.ceil(total/8));
   const ticks = []; for (let m=0;m<=total;m+=step) ticks.push(m);
   const marks = [ tl.sub && {label:"Titles", at:tl.titlesAt}, {label:"First rent", at:tl.rentStart} ].filter(Boolean);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:560,display:"block"}} role="img" aria-label="Build timeline">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:760,minWidth:560,display:"block"}} role="img" aria-label="Build timeline">
       {ticks.map(m=>(<g key={m}>
         <line x1={x(m)} x2={x(m)} y1={T-6} y2={H-B} stroke="var(--sep)" />
         <text x={x(m)} y={T-12} textAnchor="middle">{monthLabel(startMonth,m)}</text>
       </g>))}
-      {stages.map((s,i)=>{ const y0=T+i*rowH; const w=Math.max(4, x(s.b)-x(s.a)); return (<g key={s.label}>
+      {stages.map((s,i)=>{ const y0=T+i*rowH; const w=Math.max(4, x(s.b)-x(s.a)); const inside = w>76; const right = x(s.b)+70 < W; return (<g key={s.label}>
         <text x={L-10} y={y0+rowH/2+4} textAnchor="end" style={{fill:"var(--label)",fontSize:12.5}}>{s.label}</text>
         <rect x={x(s.a)} y={y0+7} width={w} height={rowH-14} rx="6" fill={s.c} opacity=".85" />
-        <text x={x(s.a)+w+6} y={y0+rowH/2+4} style={{fontSize:11}}>{mths(s.b-s.a)}</text>
+        {inside
+          ? <text x={x(s.a)+8} y={y0+rowH/2+4} style={{fontSize:11,fill:"#fff",fontWeight:600}}>{mths(s.b-s.a)}</text>
+          : right
+            ? <text x={x(s.b)+6} y={y0+rowH/2+4} style={{fontSize:11}}>{mths(s.b-s.a)}</text>
+            : <text x={x(s.a)-6} y={y0+rowH/2+4} textAnchor="end" style={{fontSize:11}}>{mths(s.b-s.a)}</text>}
       </g>); })}
-      {marks.map(m=>(<g key={m.label}>
-        <line x1={x(m.at)} x2={x(m.at)} y1={T-4} y2={H-B} stroke="var(--label)" strokeDasharray="3 3" opacity=".7"/>
-        <text x={x(m.at)+4} y={H-B-2} style={{fill:"var(--label)",fontWeight:600}}>{m.label}</text>
-      </g>))}
+      {marks.map(m=>{ const fits = x(m.at)+64 < W; return (<g key={m.label}>
+        <line x1={x(m.at)} x2={x(m.at)} y1={T-4} y2={H-B+4} stroke="var(--label)" strokeDasharray="3 3" opacity=".7"/>
+        <text x={fits ? x(m.at)+4 : x(m.at)-4} y={H-6} textAnchor={fits?"start":"end"} style={{fill:"var(--label)",fontWeight:600}}>{m.label}</text>
+      </g>); })}
     </svg>
   );
 }
@@ -508,20 +558,22 @@ function YearStrip({tl, Y, loanType, builderName}){
     loanType==="io" && { label:"Interest only period", a:0, b:5, c:"var(--blue)" },
     { label:"Own and rent it", a:0, b:Y, c:"var(--green)" },
   ].filter(Boolean);
-  const W=640, L=150, rowH=30, T=26, B=8, H=T+rows.length*rowH+B;
-  const x = y => L + (W-L-14)*y/10;
+  const W=640, L=150, rowH=30, T=26, B=22, H=T+rows.length*rowH+B;
+  const x = y => L + (W-L-24)*y/10;
+  const fits = x(Y) - 90 > L;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:560,display:"block"}} role="img" aria-label="Ten year plan">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:760,minWidth:560,display:"block"}} role="img" aria-label="Ten year plan">
       {Array.from({length:11},(_,i)=>i).map(i=>(<g key={i}>
         <line x1={x(i)} x2={x(i)} y1={T-6} y2={H-B} stroke="var(--sep)"/>
-        <text x={x(i)} y={T-12} textAnchor="middle">{i===0?"Rent starts":"Yr "+i}</text>
+        <text x={x(i)} y={T-12} textAnchor={i===0?"end":"middle"} dx={i===0?6:0}>{i===0?"Rent starts":"Yr "+i}</text>
       </g>))}
       {rows.map((s,i)=>{ const y0=T+i*rowH; return (<g key={s.label}>
         <text x={L-10} y={y0+rowH/2+4} textAnchor="end" style={{fill:"var(--label)",fontSize:12.5}}>{s.label}</text>
         <rect x={x(s.a)} y={y0+6} width={Math.max(4,x(s.b)-x(s.a))} height={rowH-12} rx="6" fill={s.c} opacity=".85"/>
+        <text x={x(s.a)+8} y={y0+rowH/2+4} style={{fontSize:11,fill:"#fff",fontWeight:600}}>{(s.b-s.a)} {s.b-s.a===1?"year":"years"}</text>
       </g>); })}
-      <line x1={x(Y)} x2={x(Y)} y1={T-4} y2={H-B} stroke="var(--label)" strokeDasharray="3 3" opacity=".7"/>
-      <text x={x(Y)-4} y={H-B-2} textAnchor="end" style={{fill:"var(--label)",fontWeight:600}}>Sell or review</text>
+      <line x1={x(Y)} x2={x(Y)} y1={T-4} y2={H-B+4} stroke="var(--label)" strokeDasharray="3 3" opacity=".7"/>
+      <text x={fits ? x(Y)-4 : x(Y)+4} y={H-6} textAnchor={fits?"end":"start"} style={{fill:"var(--label)",fontWeight:600}}>Sell or review</text>
     </svg>
   );
 }
@@ -533,12 +585,12 @@ function CashLine({series, startMonth}){
   const x = i => L + (W-L-10)*i/Math.max(1, series.length-1);
   const step = Math.pow(10, Math.floor(Math.log10(max/3))), tick = Math.ceil(max/3/step)*step;
   const pts = series.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
-  const lab = series.length<=14 ? 1 : series.length<=30 ? 3 : 6;
+  const lab = Math.max(1, Math.ceil(series.length/8));
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:380,display:"block"}} role="img" aria-label="Cash needed over time">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxWidth:720,minWidth:380,display:"block"}} role="img" aria-label="Cash needed over time">
       {[0,1,2,3].map(i=>tick*i<=max && (<g key={i}>
         <line x1={L} x2={W-4} y1={y(tick*i)} y2={y(tick*i)} stroke="var(--sep)"/>
-        <text x={L-8} y={y(tick*i)+4} textAnchor="end">{"$"+Math.round(tick*i/1000)+"k"}</text>
+        <text x={L-8} y={y(tick*i)+4} textAnchor="end">{axisMoney(tick*i)}</text>
       </g>))}
       <polyline points={pts} fill="none" stroke="var(--blue)" strokeWidth="2.5" strokeLinejoin="round"/>
       <polygon points={`${x(0)},${y(0)} ${pts} ${x(series.length-1)},${y(0)}`} fill="var(--blue)" opacity=".08"/>
@@ -658,21 +710,90 @@ const SOURCES = [
 ];
 
 function App(){
-  const [p,setP] = useState(()=>{
-    try { const s = JSON.parse(localStorage.getItem("qld-build-lease-v4")||"null"); if (s) return {...DEFAULTS,...s, checks:{...(s.checks||{})}}; } catch(e){}
-    return DEFAULTS;
-  });
+  const [p,setP] = useState(INITIAL);
   const [tab,setTab] = useState("summary");
   const [view,setView] = useState("all");
-  useEffect(()=>{ try{ localStorage.setItem("qld-build-lease-v4", JSON.stringify(p)); }catch(e){} },[p]);
-  const set = (k,v)=>setP(o=>({...o,[k]:v}));
-  const setCheck = (k,v)=>setP(o=>({...o, checks:{...(o.checks||{}), [k]:v}}));
-  const setInv = (i,k,v)=>setP(o=>{ const a=[...(o.investors||[])]; while(a.length<=i) a.push({name:`Investor ${a.length+1}`,share:0,rate:"",tax:"",fund:"loan"}); a[i]={...a[i],[k]:v}; return {...o,investors:a}; });
-  const setCount = c => setP(o=>{
+  const [toastMsg,setToastMsg] = useState(HASH_PLAN ? "Loaded the shared plan" : null);
+  const [pending,setPending] = useState(null);
+  const [copyBox,setCopyBox] = useState(null);
+  const [syncState,setSyncState] = useState("off");
+  const pRef = React.useRef(p); useEffect(()=>{ pRef.current = p; },[p]);
+  const sync = React.useRef({ db:null, canWrite:false, dirty:false, ready:false, lastWritten:0, t:null, q:Promise.resolve() });
+  useEffect(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(p)); }catch(e){} },[p]);
+  useEffect(()=>{ if (!toastMsg) return; const t=setTimeout(()=>setToastMsg(null), 3200); return ()=>clearTimeout(t); },[toastMsg]);
+  const toast = m => setToastMsg(m);
+
+  const markSeen = key => { try{ localStorage.setItem(KEY+"-seen", key); }catch(e){} };
+  const scheduleWrite = plan => {
+    const s = sync.current; if (!s.db || !s.canWrite) return;
+    clearTimeout(s.t);
+    s.t = setTimeout(()=>{ s.q = s.q.then(async()=>{
+      const stamp = Date.now(); s.lastWritten = stamp;
+      try { await s.db.doc("plan/current").set({ plan: mergePlan(plan), updatedAt: stamp }); s.dirty = false; }
+      catch(e){ if (e && e.code==="invalid_argument"){ s.canWrite=false; setSyncState("readonly"); } }
+    }); }, 900);
+  };
+  const change = fn => setP(o => { const n = fn(o); sync.current.dirty = true; scheduleWrite(n); return n; });
+  const applyPlan = (plan, key) => { setP(plan); sync.current.dirty=false; setPending(null); if (key) markSeen(key); toast("Shared plan loaded"); };
+  const set = (k,v)=>change(o=>({...o,[k]:v}));
+  const setCheck = (k,v)=>change(o=>({...o, checks:{...(o.checks||{}), [k]:v}}));
+  const setInv = (i,k,v)=>change(o=>{ const a=[...(o.investors||[])]; while(a.length<=i) a.push({name:`Investor ${a.length+1}`,share:0,rate:"",tax:"",fund:"loan"}); a[i]={...a[i],[k]:v}; return {...o,investors:a}; });
+  const setCount = c => change(o=>{
     c = clamp(c,1,10);
     const a=[...(o.investors||[])]; while(a.length<c) a.push({name:`Investor ${a.length+1}`,share:Math.round(100/c),rate:"",tax:"",fund:"loan"});
     return {...o, investorCount:c, investors:a, builder: clamp(num(o.builder),0,c-1)};
   });
+
+  // live sync through the claude.ai viewer, when this page is opened there
+  useEffect(()=>{
+    if (!IN_VIEWER) return;
+    let unsub=null, cancelled=false;
+    (async()=>{
+      try {
+        const db = await window.claude.use("db"); if (!db || cancelled) return;
+        const user = await window.claude.use("user");
+        let cw = null; try { cw = user ? await user.can("data.write") : null; } catch(e){}
+        sync.current.db = db; sync.current.canWrite = cw !== false;
+        setSyncState(cw===false ? "readonly" : "on");
+        unsub = db.doc("plan/current").onSnapshot(snap=>{
+          const s = sync.current;
+          if (!snap.exists){ if (!s.ready && HAD_LOCAL && s.canWrite) scheduleWrite(pRef.current); s.ready = true; return; }
+          const d = snap.data() || {}; const stamp = Number(d.updatedAt)||0;
+          if (stamp && stamp===s.lastWritten) { s.ready = true; return; }
+          if (snap.metadata && snap.metadata.hasPendingWrites) return;
+          const plan = mergePlan(d.plan||{});
+          const differs = planKey(plan) !== planKey(pRef.current);
+          if (differs){
+            if (!s.dirty && (s.ready || !HAD_LOCAL)) applyPlan(plan);
+            else setPending({ source:"shared", plan });
+          }
+          s.ready = true;
+        }, ()=>setSyncState("off"));
+      } catch(e){ setSyncState("off"); }
+    })();
+    return ()=>{ cancelled=true; if (unsub) unsub(); };
+  },[]);
+
+  // agreed plan kept in plan.json next to this page, for the GitHub copy
+  useEffect(()=>{
+    if (IN_VIEWER || HASH_PLAN) return;
+    (async()=>{
+      try {
+        const res = await fetch("plan.json", {cache:"no-store"}); if (!res.ok) return;
+        const j = await res.json(); const plan = mergePlan(j.plan || j); const key = planKey(plan);
+        let seen=null; try{ seen = localStorage.getItem(KEY+"-seen"); }catch(e){}
+        if (key===seen) return;
+        if (!HAD_LOCAL) applyPlan(plan, key);
+        else if (key !== planKey(pRef.current)) setPending({ source:"github", plan, key });
+        else markSeen(key);
+      } catch(e){}
+    })();
+  },[]);
+
+  const copy = async (text, msg) => { try { await navigator.clipboard.writeText(text); toast(msg); setCopyBox(null); } catch(e){ setCopyBox(text); toast("Copy it from the box below"); } };
+  const shareLink = () => copy(location.origin + location.pathname + location.search + "#plan-" + b64u(JSON.stringify(diffPlan(p))), "Link copied. Send it to the group");
+  const copyPlanFile = () => copy(JSON.stringify({ plan: mergePlan(p), updatedAt: Date.now() }, null, 2), "Plan copied. Paste it into plan.json on GitHub");
+  const keepMine = () => { const pd = pending; setPending(null); if (!pd) return; if (pd.source==="github") markSeen(pd.key); if (pd.source==="shared") { sync.current.dirty = true; scheduleWrite(pRef.current); } };
 
   const R = useMemo(()=>run(p),[p]);
   const y1 = R.rows[0];
@@ -710,11 +831,38 @@ function App(){
   ].filter(Boolean);
 
   return (<>
+    {toastMsg && <div className="toast" role="status">{toastMsg}</div>}
     <div className="wrap">
       <header>
-        <span className="eyebrow">Queensland · Build and lease · {p.location || "QLD"}</span>
-        <h1>{p.projectName || "Co-living Investment"}</h1>
+        <div className="htext">
+          <span className="eyebrow">Queensland · Build and lease · {p.location || "QLD"}</span>
+          <h1>{p.projectName || "Co-living Investment"}</h1>
+        </div>
+        <div className="hside">
+          {IN_VIEWER
+            ? (syncState==="on" ? <span className="pill good">Live sync on</span> : syncState==="readonly" ? <span className="pill info">Live view, read only</span> : <span className="pill grey">Saved on this device</span>)
+            : <button type="button" className="hbtn" onClick={shareLink}>Share link</button>}
+        </div>
       </header>
+
+      {pending && <div className="banner">
+        <div className="lbl">
+          <span><b>{pending.source==="github" ? "The agreed plan on GitHub has changed." : "The shared plan has changed."}</b></span>
+          <span className="hint">Load it and your numbers on this device get replaced. Keep yours{pending.source==="shared" && syncState==="on" ? " and it becomes the shared plan" : ""}.</span>
+        </div>
+        <div className="bbtns">
+          <button type="button" className="hbtn" onClick={()=>applyPlan(pending.plan, pending.key)}>Load it</button>
+          <button type="button" className="hbtn plain" onClick={keepMine}>Keep mine</button>
+        </div>
+      </div>}
+
+      {copyBox && <div className="banner">
+        <div className="lbl" style={{width:"100%"}}>
+          <span><b>Copy didn't work automatically. Select this and copy it.</b></span>
+          <textarea className="copybox" readOnly value={copyBox} onFocus={e=>e.target.select()} rows={3}/>
+        </div>
+        <div className="bbtns"><button type="button" className="hbtn plain" onClick={()=>setCopyBox(null)}>Close</button></div>
+      </div>}
 
       <div className="tabwrap">
         <div className="tabs" role="tablist">
@@ -779,7 +927,7 @@ function App(){
         <div className="stack">
           {multi && <Group title="Each person" right={<span>Cash in · Per week</span>} footer="Per week is year 1 after tax, after bank and builder repayments.">
             {R.inv.map(iv=>(
-              <Val key={iv.i} label={<>{iv.name} <span className={"pill "+(iv.fund==="undecided"?"warn":iv.fund==="boots"?"info":"grey")} style={{marginLeft:6}}>{iv.isBuilder?"Builder":iv.fund==="boots"?`Owes ${B.name}`:FUND[iv.fund]}</span></>}
+              <Val key={iv.i} label={<span className="namerow"><span>{iv.name}</span><span className={"pill "+(iv.fund==="undecided"?"warn":iv.fund==="boots"?"info":"grey")}>{iv.isBuilder?"Builder":iv.fund==="boots"?`Owes ${B.name}`:FUND[iv.fund]}</span></span>}
                    hint={`${(iv.s*100).toFixed(0)}% share${iv.loan0>0?` · bank loan ${money(iv.loan)}`:""}${iv.debt0>0?` · owes ${money(iv.debt0)}`:""}`}
                    value={<>{money(iv.cashIn)} · <span className={cls(iv.rows[0].after)}>{money(iv.rows[0].after/52)}</span></>}/>
             ))}
@@ -862,7 +1010,7 @@ function App(){
             const fundOpts = [["loan","Bank loan"], ...(iv.isBuilder?[]:[["boots",`Owes ${B.name}`]]), ["cash","Own cash"], ["undecided","Not decided"]];
             return (
               <div className="stack" key={iv.i}>
-                <Group title={<>{iv.name}{iv.isBuilder && <span className="pill info" style={{marginLeft:8}}>Builder</span>}</>} right={<span>{(iv.s*100).toFixed(1)}%</span>}
+                <Group title={<span className="namerow"><span>{iv.name}</span>{iv.isBuilder && <span className="pill info">Builder</span>}</span>} right={<span>{(iv.s*100).toFixed(1)}%</span>}
                   footer={iv.fund==="undecided" ? `${iv.name} hasn't settled how they're paying. The maths uses a bank loan until you pick.` : iv.fund==="cash" ? "No bank loan. They put their whole share in as cash." : null} warn={iv.fund==="undecided"}>
                   <NumRow id={`n${iv.i}`} text label="Name" value={src.name ?? iv.name} onChange={v=>setInv(iv.i,"name",v)}/>
                   {p.splitMode==="custom"
@@ -927,7 +1075,7 @@ function App(){
         </div>
 
         <section className="gwrap">
-          <div className="ghead"><span>Getting it built</span><span>{Math.round(R.tl.rentStart)} months to first rent</span></div>
+          <div className="ghead"><span>Getting it built</span><span>{Math.round(R.tl.rentStart)} months</span></div>
           <div className="chartbox"><Gantt tl={R.tl} startMonth={p.startMonth}/></div>
         </section>
 
@@ -939,29 +1087,31 @@ function App(){
         <section className="gwrap">
           <div className="ghead"><span>Who pays what, and when</span></div>
           <div className="tablebox">
-            <table>
+            <table className="stages">
               <thead><tr><th>Stage</th><th>When</th>{R.inv.map(iv=><th key={iv.i}>{iv.name}</th>)}<th>Total</th></tr></thead>
               <tbody>
                 {[
-                  ["settle","Settlement","Deposit on land, stamp duty, loan fees",R.tl.settleAt],
-                  R.tl.sub && ["sub","Subdivision","Costs the bank doesn't cover, plus interest",R.tl.settleAt],
-                  ["build","Build",`Progress payments the bank doesn't cover, plus interest${R.fronted>0?`. ${B.name} fronts ${money(R.fronted)}`:""}`,R.tl.buildStartAt],
-                  ["fitout","Fit out","Furniture and other costs",R.tl.buildEnd],
-                  R.sell>0 && ["lotBack","Lot sale",p.payDown==="yes"?"Money back after paying down the loan":"Money back to each person",R.tl.lotSaleAt],
-                  ["taxBack","Tax return","Refund on interest paid while building",R.tl.rentStart],
-                ].filter(Boolean).map(([k,label,hint,at])=>(
-                  <tr key={k}>
-                    <td><div>{label}</div><div className="hint">{hint}</div></td>
-                    <td>{monthLabel(p.startMonth,at)}</td>
-                    {R.inv.map(iv=><td key={iv.i} className={iv.stages[k]<0?"pos":""}>{money(iv.stages[k])}</td>)}
-                    <td className={R.stageTotals[k]<0?"pos":""}>{money(R.stageTotals[k])}</td>
+                  { k:"settle", label:"Settlement", hint:"Deposit on land, stamp duty, loan fees", at:R.tl.settleAt, val:iv=>iv.stages.settle, tot:R.stageTotals.settle },
+                  R.tl.sub && { k:"sub", label:"Subdivision", hint:"Costs the bank doesn't cover, plus interest", at:R.tl.settleAt, val:iv=>iv.stages.sub, tot:R.stageTotals.sub },
+                  R.sell>0 && (p.payDown==="yes"
+                    ? { k:"lot", label:"Lot sale", hint:"Goes straight onto the bank loans, not into anyone's pocket", at:R.tl.lotSaleAt, val:iv=>-(iv.loan0-iv.loan), tot:-(R.loanStart-R.loan), muted:true }
+                    : { k:"lot", label:"Lot sale", hint:"Money back to each person after tax", at:R.tl.lotSaleAt, val:iv=>iv.stages.lotBack, tot:R.stageTotals.lotBack }),
+                  { k:"build", label:"Build", hint:`Progress payments the bank doesn't cover, plus interest${R.fronted>0?`. ${B.name} fronts ${money(R.fronted)}`:""}`, at:R.tl.buildStartAt, val:iv=>iv.stages.build, tot:R.stageTotals.build },
+                  { k:"fitout", label:"Fit out", hint:"Furniture and other costs", at:R.tl.buildEnd, val:iv=>iv.stages.fitout, tot:R.stageTotals.fitout },
+                  { k:"taxBack", label:"Tax return", hint:"Refund on interest paid while building", at:R.tl.rentStart, val:iv=>iv.stages.taxBack, tot:R.stageTotals.taxBack },
+                ].filter(Boolean).sort((a,b)=>a.at-b.at).map(r=>(
+                  <tr key={r.k} className={r.muted?"muted":""}>
+                    <td><div>{r.label}</div><div className="hint">{r.hint}</div></td>
+                    <td>{monthLabel(p.startMonth,r.at)}</td>
+                    {R.inv.map(iv=>{ const v=r.val(iv); return <td key={iv.i} className={!r.muted&&v<0?"pos":""}>{money(v)}</td>; })}
+                    <td className={!r.muted&&r.tot<0?"pos":""}>{money(r.tot)}</td>
                   </tr>
                 ))}
                 <tr className="total"><td>Total cash in</td><td></td>{R.inv.map(iv=><td key={iv.i}>{money(iv.cashIn)}</td>)}<td>{money(R.cashIn)}</td></tr>
               </tbody>
             </table>
           </div>
-          <div className="gfoot">Negative numbers are money coming back. The bank pays its share of each stage directly.</div>
+          <div className="gfoot">Green numbers are money coming back. The bank pays its share of each stage directly.{R.sell>0&&p.payDown==="yes"?" The grey lot sale row isn't counted in the total, it comes off the loans.":""}</div>
         </section>
 
         <section className="gwrap">
@@ -993,17 +1143,29 @@ function App(){
             {decisions.map(d=><Check key={d.id} id={d.id} label={d.label} hint={d.hint} checked={p.checks[d.id]} onChange={v=>setCheck(d.id,v)}/>)}
           </Group>
           <Group title="How it's worked out">
-            <Val label="Stamp duty" value="QLD general rate on the land"/>
-            <Val label="Land tax" value="QLD individual rates, one threshold for the block"/>
-            <Val label="Lot sale profit" value="Taxed as income at each person's rate"/>
-            <Val label="Interest while building" value="Claimed as a deduction that year"/>
-            <Val label="Depreciation" value="2.5% building, 20% diminishing on fittings"/>
-            <Val label="Loan fees" value="Claimed over 5 years"/>
-            <Val label="Sale" value="50% CGT discount, loans and builder debt cleared"/>
-            <Val label="Return a year" value="Internal rate of return on each person's cash"/>
+            <Note label="Stamp duty" text="QLD general rate on the land price."/>
+            <Note label="Land tax" text="QLD individual rates. The block is assessed as one owner, so there's one $600k threshold, not one each."/>
+            <Note label="Lot sale profit" text="Taxed as income at each person's rate."/>
+            <Note label="Interest while building" text="Claimed as a deduction in the year it's paid."/>
+            <Note label="Depreciation" text="2.5% a year on the building. 20% diminishing on fittings and furniture."/>
+            <Note label="Loan fees" text="Claimed over 5 years."/>
+            <Note label="Sale" text="Selling costs off the top, 50% CGT discount, bank loans and builder debt cleared from the proceeds."/>
+            <Note label="Return a year" text="Internal rate of return on each person's own cash, from first rent to the sale year."/>
           </Group>
         </div>
         <div className="stack">
+          <Group title="Sharing" footer={IN_VIEWER
+              ? (syncState==="on" ? "Changes you make here save to the shared plan and show up for everyone who opens this link, on any device." : syncState==="readonly" ? "You can see the shared plan and play with the numbers, but your changes stay on this device." : "Saved on this device only.")
+              : "Numbers save on this device. To get them to the others, send a share link, or make them the agreed plan on GitHub."}>
+            {IN_VIEWER
+              ? <Val label="Live sync" value={syncState==="on" ? "On" : syncState==="readonly" ? "Read only" : "Off"} strong/>
+              : <>
+                <button type="button" className="btn" onClick={shareLink}>Copy share link</button>
+                <div className="gfoot" style={{padding:"0 16px 12px"}}>Whoever opens the link sees these exact numbers. Good for "have a look at this".</div>
+                <button type="button" className="btn" onClick={copyPlanFile}>Copy plan file</button>
+                <div className="gfoot" style={{padding:"0 16px 12px"}}>Paste it into plan.json in the GitHub repo. Everyone gets asked to load it next time they open the page.</div>
+              </>}
+          </Group>
           <Group title="Where the starting numbers came from" footer="Checked October 2026. Land price, build cost and finished value are the ones you most need to replace with your own.">
             {SOURCES.map(([what, who, url])=>(
               <div className="src" key={url}><b>{what}</b><span>{who}</span><a href={url} target="_blank" rel="noopener">{url.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]}</a></div>
