@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>QLD Build and Lease</title>
+<title>Co-living Plan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
@@ -155,7 +155,7 @@ const { useState, useMemo, useEffect } = React;
 
 // ==== MODEL ====
 const DEFAULTS = {
-  projectName: "Co-living build", location: "Brisbane, QLD", startMonth: "2026-11",
+  projectName: "Co-living Plan", location: "Brisbane, QLD", startMonth: "2026-11",
   land: 780000, otherLand: 0,
   subdivide: "yes", lots: 2, lotsSell: 1, lotPrice: 480000, settleMonths: 1.5, subMonths: 10, lotSettleMonths: 2,
   survey: 15000, councilFees: 12000, infraPerLot: 18800, civil: 45000, connections: 20000, titles: 6000,
@@ -1046,7 +1046,7 @@ function App(){
       <header>
         <div className="htext">
           <span className="eyebrow">Queensland · Build and lease · {p.location || "QLD"}</span>
-          <h1>{p.projectName || "Co-living Investment"}</h1>
+          <h1>{p.projectName || "Co-living Plan"}</h1>
         </div>
         <div className="hside">
           {syncState==="on" ? <span className="pill good">Live sync on</span>
