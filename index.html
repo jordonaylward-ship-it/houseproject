@@ -112,7 +112,18 @@ table.stages td:first-child .hint{margin-top:2px}
 .stepper span{text-align:center;font-weight:600}
 .selectwrap select{font:500 15px var(--font);color:var(--blue);background:transparent;border:0;outline:none;text-align:right;cursor:pointer;max-width:220px}
 .btn{border:0;background:transparent;color:var(--blue);font:400 16px var(--font);cursor:pointer;padding:12px 16px;text-align:left;width:100%}
-.check{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;position:relative;cursor:pointer}
+.check{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;position:relative}
+.chk{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0;cursor:pointer}
+.mini{border:0;background:var(--seg);color:var(--blue);font:600 13px var(--font);padding:6px 11px;border-radius:999px;cursor:pointer;flex-shrink:0;margin-top:1px}
+.editrow{display:grid;gap:8px;padding:12px 16px;position:relative;background:color-mix(in srgb,var(--blue) 5%,var(--card))}
+.row+.editrow::before,.check+.editrow::before,.editrow+.check::before,.editrow+.editrow::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.edit-title,.edit-hint{width:100%;border:1px solid var(--sep);border-radius:8px;padding:9px 10px;font:400 15px var(--font);color:var(--label);background:var(--card);outline:none}
+.edit-title{font-weight:600}
+.edit-title:focus,.edit-hint:focus{border-color:var(--blue)}
+.edit-hint{resize:vertical;line-height:1.4}
+.hbtn.danger{color:var(--red)}
+.check+.btn,.editrow+.btn,.btn+.btn{border-top:.5px solid var(--sep)}
+.btn.addnote{font-weight:600}
 .check input{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--sep);margin:1px 0 0;flex-shrink:0;cursor:pointer;display:grid;place-items:center;background:var(--card)}
 .check input:checked{background:var(--green);border-color:var(--green)}
 .check input:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
@@ -162,6 +173,8 @@ const DEFAULTS = {
     { name: "Bonnie", share: 25, rate: "", tax: "", fund: "boots", jointWith: 1, payback: "weekly" },
   ],
   checks: {},
+  notes: [],
+  noteEdits: {},
   schema: 2
 };
 
@@ -461,6 +474,8 @@ function mergePlan(obj){
   if (obj && typeof obj==="object") Object.keys(DEFAULTS).forEach(k=>{ if (obj[k]!==undefined) out[k]=obj[k]; });
   if (!Array.isArray(out.investors)) out.investors = DEFAULTS.investors;
   if (!out.checks || typeof out.checks!=="object") out.checks = {};
+  if (!Array.isArray(out.notes)) out.notes = [];
+  if (!out.noteEdits || typeof out.noteEdits!=="object") out.noteEdits = {};
   // plans saved by earlier versions of this page: bring them up to date once
   const oldSchema = (obj && typeof obj==="object" && obj.schema!==undefined) ? num(obj.schema) : 0;
   if (oldSchema < 2){
@@ -557,12 +572,29 @@ function Val({label,hint,value,c,strong}){
 function Note({label,text}){
   return <div className="src"><b>{label}</b><span>{text}</span></div>;
 }
-function Check({id,label,hint,checked,onChange}){
+function Check({id,label,hint,checked,onChange,onEdit}){
   return (
-    <label className="check" htmlFor={id}>
-      <input id={id} type="checkbox" checked={!!checked} onChange={e=>onChange(e.target.checked)} />
-      <span className="lbl"><span>{label}</span>{hint && <span className="hint">{hint}</span>}</span>
-    </label>
+    <div className="check">
+      <label className="chk" htmlFor={id}>
+        <input id={id} type="checkbox" checked={!!checked} onChange={e=>onChange(e.target.checked)} />
+        <span className="lbl"><span>{label}</span>{hint && <span className="hint">{hint}</span>}</span>
+      </label>
+      {onEdit && <button type="button" className="mini" onClick={onEdit} aria-label={`Edit ${label}`}>Edit</button>}
+    </div>
+  );
+}
+function NoteEditor({draft,setDraft,onSave,onCancel,onRemove,removeLabel,onReset}){
+  return (
+    <div className="editrow">
+      <input className="edit-title" value={draft.label} placeholder="What needs deciding or checking" onChange={e=>setDraft({...draft,label:e.target.value})} autoFocus/>
+      <textarea className="edit-hint" rows={3} value={draft.hint} placeholder="Details, optional" onChange={e=>setDraft({...draft,hint:e.target.value})}/>
+      <div className="bbtns">
+        <button type="button" className="hbtn" onClick={onSave}>Save</button>
+        <button type="button" className="hbtn plain" onClick={onCancel}>Cancel</button>
+        {onReset && <button type="button" className="hbtn plain" onClick={onReset}>Back to original</button>}
+        {onRemove && <button type="button" className="hbtn plain danger" onClick={onRemove}>{removeLabel}</button>}
+      </div>
+    </div>
   );
 }
 
@@ -793,6 +825,8 @@ function App(){
   const [pending,setPending] = useState(null);
   const [copyBox,setCopyBox] = useState(null);
   const [syncState,setSyncState] = useState("off");
+  const [editing,setEditing] = useState(null);
+  const [draft,setDraft] = useState({ label:"", hint:"" });
   const [syncUrlRepo,setSyncUrlRepo] = useState("");
   const [syncUrlLocal,setSyncUrlLocal] = useState(LOCAL_SYNC);
   const syncUrl = looksLikeSyncUrl(syncUrlRepo) ? syncUrlRepo.trim() : looksLikeSyncUrl(syncUrlLocal) ? syncUrlLocal.trim() : "";
@@ -808,10 +842,13 @@ function App(){
   const mergeOnto = (latest, base, mine) => {
     if (!latest || !base) return mine;
     const out = {...latest};
-    Object.keys(DEFAULTS).forEach(k=>{ if (k!=="checks" && JSON.stringify(mine[k])!==JSON.stringify(base[k])) out[k]=mine[k]; });
-    const checks = {...(latest.checks||{})}, mc = mine.checks||{}, bc = base.checks||{};
-    Object.keys({...mc, ...bc}).forEach(id=>{ if (mc[id]!==bc[id]) checks[id]=mc[id]; });
-    out.checks = checks;
+    const perKey = ["checks","noteEdits"];
+    Object.keys(DEFAULTS).forEach(k=>{ if (!perKey.includes(k) && JSON.stringify(mine[k])!==JSON.stringify(base[k])) out[k]=mine[k]; });
+    perKey.forEach(k=>{
+      const merged = {...(latest[k]||{})}, mk = mine[k]||{}, bk = base[k]||{};
+      Object.keys({...mk, ...bk}).forEach(id=>{ if (JSON.stringify(mk[id])!==JSON.stringify(bk[id])){ if (mk[id]===undefined) delete merged[id]; else merged[id]=mk[id]; } });
+      out[k] = merged;
+    });
     return mergePlan(out);
   };
   const scheduleWrite = () => {
@@ -978,6 +1015,30 @@ function App(){
     { id:"insurance", label:"Insurance that covers rooming accommodation", hint:"Standard landlord policies often exclude it." },
     { id:"rta", label:"Set up rooming accommodation agreements, not normal leases", hint:"In QLD each room is rented on a rooming accommodation agreement (RTA Form R18)." },
   ].filter(Boolean);
+
+  // notes: the built in ones can be reworded or hidden, and you can add your own. All of it is shared.
+  const noteEdits = p.noteEdits || {};
+  const items = [
+    ...decisions.map(d => { const e = noteEdits[d.id]; if (e && e.hidden) return null; return { ...d, label: (e && e.label) || d.label, hint: (e && e.hint!==undefined) ? e.hint : d.hint, builtin:true, edited: !!(e && (e.label || e.hint!==undefined)) }; }).filter(Boolean),
+    ...(p.notes||[]).map(n => ({ ...n, builtin:false })),
+  ];
+  const hiddenCount = decisions.filter(d => noteEdits[d.id] && noteEdits[d.id].hidden).length;
+  const startEdit = it => { setEditing(it.id); setDraft({ label: it.label, hint: it.hint||"" }); };
+  const saveEdit = it => {
+    const label = draft.label.trim(), hint = draft.hint.trim(); if (!label) return;
+    if (it.builtin) change(o=>({ ...o, noteEdits: { ...(o.noteEdits||{}), [it.id]: { ...((o.noteEdits||{})[it.id]||{}), label, hint } } }));
+    else change(o=>({ ...o, notes: (o.notes||[]).map(n => n.id===it.id ? { ...n, label, hint } : n) }));
+    setEditing(null);
+  };
+  const removeItem = it => {
+    if (it.builtin) change(o=>({ ...o, noteEdits: { ...(o.noteEdits||{}), [it.id]: { ...((o.noteEdits||{})[it.id]||{}), hidden:true } } }));
+    else change(o=>({ ...o, notes: (o.notes||[]).filter(n => n.id!==it.id) }));
+    setEditing(null);
+  };
+  const cancelEdit = it => { if (!it.builtin && !it.label) removeItem(it); else setEditing(null); };
+  const resetItem = it => { change(o=>{ const ne = { ...(o.noteEdits||{}) }; delete ne[it.id]; return { ...o, noteEdits: ne }; }); setEditing(null); };
+  const addNote = () => { const id = "n-" + Date.now().toString(36); change(o=>({ ...o, notes: [...(o.notes||[]), { id, label:"", hint:"" }] })); setDraft({ label:"", hint:"" }); setEditing(id); };
+  const unhideAll = () => change(o=>{ const ne = {}; Object.keys(o.noteEdits||{}).forEach(k=>{ const e = { ...o.noteEdits[k] }; delete e.hidden; if (Object.keys(e).length) ne[k] = e; }); return { ...o, noteEdits: ne }; });
 
   return (<>
     {toastMsg && <div className="toast" role="status">{toastMsg}</div>}
@@ -1324,8 +1385,12 @@ function App(){
 
       {tab==="notes" && <div className="cols">
         <div className="stack">
-          <Group title="Decisions and checks" right={<span>{decisions.filter(d=>p.checks[d.id]).length} of {decisions.length} done</span>} footer="Tick these off as the group settles them. Ticks save on this device.">
-            {decisions.map(d=><Check key={d.id} id={d.id} label={d.label} hint={d.hint} checked={p.checks[d.id]} onChange={v=>setCheck(d.id,v)}/>)}
+          <Group title="Decisions and checks" right={<span>{items.filter(d=>p.checks[d.id]).length} of {items.length} done</span>} footer="Tick things off as the group settles them. Tap Edit to change the wording or hide one, or add your own at the bottom. Ticks and notes are shared with everyone.">
+            {items.map(it => editing===it.id
+              ? <NoteEditor key={it.id} draft={draft} setDraft={setDraft} onSave={()=>saveEdit(it)} onCancel={()=>cancelEdit(it)} onRemove={()=>removeItem(it)} removeLabel={it.builtin?"Hide":"Delete"} onReset={it.builtin && it.edited ? ()=>resetItem(it) : null}/>
+              : <Check key={it.id} id={it.id} label={it.label} hint={it.hint} checked={p.checks[it.id]} onChange={v=>setCheck(it.id,v)} onEdit={()=>startEdit(it)}/>)}
+            <button type="button" className="btn addnote" onClick={addNote}>Add a note</button>
+            {hiddenCount>0 && <button type="button" className="btn addnote" onClick={unhideAll}>Show {hiddenCount} hidden</button>}
           </Group>
           <Group title="How it's worked out">
             <Note label="Stamp duty" text="QLD general rate on the land price."/>
@@ -1339,23 +1404,6 @@ function App(){
           </Group>
         </div>
         <div className="stack">
-          <Group title="Sharing" footer={IN_VIEWER
-              ? (syncState==="on" ? "Changes you make here save to the shared plan and show up for everyone who opens this link, on any device." : syncState==="readonly" ? "You can see the shared plan and play with the numbers, but your changes stay on this device." : "Saved on this device only.")
-              : syncUrl
-                ? (syncState==="on" ? "Live sync is on. Every change saves to the shared plan within a second or two and every device picks it up within about ten." : syncState==="error" ? "Can't reach the Google script right now. Changes are kept here and sent when it comes back." : "Connecting to the shared plan.")
-                : "No shared plan set up yet. Numbers save on this device only. Paste the Google script link here, or put it in sync.json in the repo so nobody has to."}>
-            {IN_VIEWER
-              ? <Val label="Live sync" value={syncState==="on" ? "On" : syncState==="readonly" ? "Read only" : "Off"} strong/>
-              : <>
-                {looksLikeSyncUrl(syncUrlRepo)
-                  ? <Val label="Sync link" hint="Set in sync.json in the repo" value={syncState==="on" ? "Connected" : syncState==="error" ? "Problem" : "Connecting"} strong c={syncState==="error"?"warnc":""}/>
-                  : <NumRow id="syncUrl" text label="Sync link" hint="Web app URL from the Google script, ends in /exec" placeholder="https://script.google.com/macros/s/…/exec" value={syncUrlLocal} onChange={setSyncUrlLocal}/>}
-                <button type="button" className="btn" onClick={shareLink}>Copy share link</button>
-                <div className="gfoot" style={{padding:"0 16px 12px"}}>Whoever opens the link sees these exact numbers. Good for "have a look at this" without touching the shared plan.</div>
-                <button type="button" className="btn" onClick={copyPlanFile}>Copy plan file</button>
-                <div className="gfoot" style={{padding:"0 16px 12px"}}>{syncUrl ? "A backup copy of the plan you can keep in plan.json in the repo." : "Paste it into plan.json in the GitHub repo. Everyone gets asked to load it next time they open the page."}</div>
-              </>}
-          </Group>
           <Group title="Where the starting numbers came from" footer="Checked October 2026. Land price, build cost and finished value are the ones you most need to replace with your own.">
             {SOURCES.map(([what, who, url])=>(
               <div className="src" key={url}><b>{what}</b><span>{who}</span><a href={url} target="_blank" rel="noopener">{url.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]}</a></div>
