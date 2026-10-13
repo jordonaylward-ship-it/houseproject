@@ -1052,7 +1052,7 @@ function App(){
                   : <NumRow key={k} id={k} label={l} hint={h} unit={u} value={p[k]} onChange={v=>set(k,v)}/>)}
               </Group>
             ))}
-            {col===1 && <Group><button className="btn" onClick={()=>setP({...DEFAULTS, checks:p.checks})}>Reset to researched figures</button></Group>}
+            {col===1 && <Group><button className="btn" onClick={()=>change(o=>({...DEFAULTS, checks:o.checks||{}}))}>Reset to researched figures</button></Group>}
           </div>
         ))}
       </div>}
