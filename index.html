@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: iOS style grouped lists. Segmented tabs up top, live totals in a frosted bar fixed to the bottom */
+/* Layout: iOS style grouped lists. Segmented tabs up top, live totals in a frosted bar fixed to the bottom. Light theme only. */
 :root{
   --bg:#f2f2f7; --card:#ffffff; --sep:rgba(60,60,67,.16); --label:#1c1c1e; --sec:rgba(60,60,67,.62);
-  --blue:#007aff; --green:#248a3d; --red:#d70015; --orange:#c93400;
+  --blue:#007aff; --green:#248a3d; --red:#d70015; --orange:#c93400; --purple:#5856d6;
   --seg:rgba(118,118,128,.12); --segOn:#ffffff; --bar:rgba(249,249,251,.82); --fill:rgba(118,118,128,.10);
   --title:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
   --font:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
@@ -22,23 +22,24 @@ body{background:var(--bg);color:var(--label);font-family:var(--font);font-size:1
 .wrap{max-width:1100px;margin:0 auto;display:grid;gap:20px}
 header{display:grid;gap:4px}
 .eyebrow{font-size:13px;font-weight:600;color:var(--sec);letter-spacing:.02em}
-h1,.big,.tile .v,.bar .m b,.ghead,.group > .row .val.strong{font-family:var(--title)}
+h1,.big,.tile .v,.bar .m b,.ghead,.val.strong,.hero .sub{font-family:var(--title)}
 h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0;line-height:1.1;text-wrap:balance}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--seg);border-radius:10px;padding:2px;max-width:560px;width:100%}
+.tabwrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(84px,1fr));background:var(--seg);border-radius:10px;padding:2px;max-width:720px;min-width:520px}
 .tabs button,.seg button{border:0;background:transparent;color:var(--label);font:500 14px var(--font);padding:7px 6px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .tabs button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--segOn);box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);font-weight:600}
 .seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--seg);border-radius:9px;padding:2px;flex-shrink:0}
-.seg button{font-size:13px;padding:6px 12px}
+.seg button{font-size:13px;padding:6px 10px}
 .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
 @media (min-width:900px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .stack{display:grid;gap:22px;min-width:0}
 .gwrap{display:grid;gap:6px;min-width:0}
-.ghead{font-size:13px;color:var(--sec);text-transform:uppercase;letter-spacing:.03em;padding:0 16px;display:flex;justify-content:space-between;gap:8px}
+.ghead{font-size:13px;color:var(--sec);text-transform:uppercase;letter-spacing:.03em;padding:0 16px;display:flex;justify-content:space-between;gap:8px;font-weight:500}
 .gfoot{font-size:13px;color:var(--sec);padding:0 16px;line-height:1.4}
 .gfoot.warn{color:var(--orange)}
 .group{background:var(--card);border-radius:12px;overflow:hidden}
 .row{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 16px;position:relative}
-.row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.row+.row::before,.row+.check::before,.check+.row::before,.check+.check::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
 .row.wrapme{flex-wrap:wrap}
 .lbl{flex:1;min-width:0;display:grid;gap:1px}
 .hint{font-size:12.5px;color:var(--sec);line-height:1.3}
@@ -46,21 +47,26 @@ h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0
 .inp:focus-within{background:var(--fill)}
 .inp .u{color:var(--sec);font-size:15px}
 .inp input{width:118px;text-align:right;border:0;background:transparent;font:400 16px var(--font);color:var(--blue);outline:none;padding:2px 0;font-variant-numeric:tabular-nums}
-.inp input.name{width:160px}
+.inp input.name{width:170px}
+.inp input.month{width:150px;color:var(--blue)}
 .inp input::placeholder{color:var(--sec)}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
 .val{color:var(--sec);text-align:right;white-space:nowrap}
 .val.strong{color:var(--label);font-weight:600}
-.pos{color:var(--green)!important} .neg{color:var(--red)!important}
+.pos{color:var(--green)!important} .neg{color:var(--red)!important} .warnc{color:var(--orange)!important}
 .hero{background:var(--card);border-radius:16px;padding:20px;display:grid;gap:6px}
-.pill{justify-self:start;font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
 .pill.good{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
 .pill.bad{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+.pill.warn{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
+.pill.info{background:color-mix(in srgb,var(--blue) 12%,transparent);color:var(--blue)}
+.pill.grey{background:var(--seg);color:var(--sec)}
 .big{font-size:clamp(36px,8vw,48px);font-weight:700;letter-spacing:-.025em;line-height:1.05}
-.hero p{margin:0;color:var(--sec);font-size:15px;max-width:52ch}
+.hero p{margin:0;color:var(--sec);font-size:15px;max-width:56ch}
 .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (min-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:900px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tile{background:var(--card);border-radius:12px;padding:12px 14px;display:grid;gap:2px;min-width:0}
 .tile .k{font-size:12.5px;color:var(--sec)}
 .tile .v{font-size:20px;font-weight:600;letter-spacing:-.01em;overflow-wrap:anywhere}
@@ -72,21 +78,33 @@ th,td{padding:10px 12px;text-align:right}
 th{font-size:12px;font-weight:600;color:var(--sec);text-transform:uppercase;letter-spacing:.03em;border-bottom:.5px solid var(--sep)}
 td{border-bottom:.5px solid var(--sep)}
 tr:last-child td{border-bottom:0}
+tr.total td{font-weight:600;color:var(--label)}
 th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
 .invgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
 @media (min-width:900px){.invgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .stepper{display:inline-grid;grid-template-columns:36px 36px 36px;align-items:center;background:var(--seg);border-radius:9px;overflow:hidden}
 .stepper button{border:0;background:transparent;color:var(--label);font:500 20px var(--font);height:32px;cursor:pointer}
 .stepper span{text-align:center;font-weight:600}
-.selectwrap select{font:500 15px var(--font);color:var(--blue);background:transparent;border:0;outline:none;text-align:right;cursor:pointer;max-width:200px}
+.selectwrap select{font:500 15px var(--font);color:var(--blue);background:transparent;border:0;outline:none;text-align:right;cursor:pointer;max-width:220px}
 .btn{border:0;background:transparent;color:var(--blue);font:400 16px var(--font);cursor:pointer;padding:12px 16px;text-align:left;width:100%}
+.check{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;position:relative;cursor:pointer}
+.check input{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--sep);margin:1px 0 0;flex-shrink:0;cursor:pointer;display:grid;place-items:center;background:var(--card)}
+.check input:checked{background:var(--green);border-color:var(--green)}
+.check input:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.check .lbl{gap:2px}
+.check input:checked ~ .lbl > span:first-child{color:var(--sec);text-decoration:line-through}
+.src{display:grid;gap:4px;padding:12px 16px;position:relative}
+.src+.src::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.src a{color:var(--blue);text-decoration:none;font-size:13.5px;overflow-wrap:anywhere}
+.src b{font-weight:600;font-size:15px}
+.src span{font-size:13.5px;color:var(--sec)}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
 .bar .in{max-width:1100px;margin:0 auto;display:flex;gap:20px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .bar .m{display:grid}
 .bar .m span{font-size:12px;color:var(--sec)}
 .bar .m b{font-size:18px;font-weight:600;letter-spacing:-.01em}
-button:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-@media (max-width:520px){.inp input{width:96px}.tabs button{font-size:13px}.row.wrapme .seg{width:100%}}
+button:focus-visible,select:focus-visible,.check input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (max-width:520px){.inp input{width:96px}.inp input.name{width:130px}.tabs button{font-size:13px}.row.wrapme .seg{width:100%}.seg button{padding:6px 6px;font-size:12.5px}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -99,82 +117,34 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-
 <script type="text/babel">
 const { useState, useMemo, useEffect } = React;
 
+// ==== MODEL ====
 const DEFAULTS = {
-  land: 650000, otherLand: 0,
-  subdivide: "yes", lots: 2, lotsSell: 1, lotPrice: 420000, subMonths: 10,
-  survey: 15000, councilFees: 12000, infraPerLot: 30000, civil: 45000, connections: 20000, titles: 6000,
-  build: 620000, finishedValue: 900000, otherUpfront: 30000, furniture: 25000, buildMonths: 10,
-  lvr: 80, rate: 6.2, loanType: "io", term: 30, payDown: "yes",
-  rentMode: "rooms", rooms: 5, roomRent: 320, weeklyRent: 750, vacancyWeeks: 3, pmPct: 10,
-  councilRates: 3200, water: 1800, insurance: 3000, maintenance: 3000, utilities: 5000, internet: 1200, cleaning: 2000,
-  taxRate: 39, valueGrowth: 4, rentGrowth: 3, costGrowth: 3, fittingsDep: 12000, sellCostPct: 2.5,
-  investorCount: 2, splitMode: "equal",
-  investors: [{name:"Jordy",share:50,rate:"",tax:""},{name:"Investor 2",share:50,rate:"",tax:""}]
+  projectName: "Co-living build", location: "Brisbane, QLD", startMonth: "2026-11",
+  land: 780000, otherLand: 0,
+  subdivide: "yes", lots: 2, lotsSell: 1, lotPrice: 480000, settleMonths: 1.5, subMonths: 10, lotSettleMonths: 2,
+  survey: 15000, councilFees: 12000, infraPerLot: 18800, civil: 45000, connections: 20000, titles: 6000,
+  buildRetail: 740000, build: 620000, bootsFee: 0, contingency: 7, plant: 45000, furniture: 25000, otherUpfront: 30000, loanFees: 2500,
+  buildMonths: 10, buildStart: "titles", leaseUpMonths: 1, finishedValue: 1000000,
+  lvr: 80, rate: 7.1, loanType: "io", term: 30, payDown: "yes",
+  rentMode: "rooms", rooms: 5, roomRent: 360, weeklyRent: 900, vacancyWeeks: 3, pmPct: 10, lettingFees: 1800,
+  councilRates: 3400, water: 1800, insurance: 3200, maintenance: 3000, utilities: 6000, internet: 1300, cleaning: 2000,
+  taxRate: 32, valueGrowth: 5, rentGrowth: 3.5, costGrowth: 3, sellCostPct: 2.5, sellYear: 10,
+  investorCount: 4, splitMode: "equal", builder: 0, bootsYears: 10, bootsRate: 0,
+  investors: [
+    { name: "Boots",  share: 25, rate: "", tax: "", fund: "loan" },
+    { name: "Jordy",  share: 25, rate: "", tax: "", fund: "boots" },
+    { name: "Joel",   share: 25, rate: "", tax: "", fund: "undecided" },
+    { name: "Bonnie", share: 25, rate: "", tax: "", fund: "boots" },
+  ],
+  checks: {}
 };
 
 const num = v => { const x = parseFloat(v); return isFinite(x) ? x : 0; };
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const isSub = p => p.subdivide === "yes";
 const isRooms = p => p.rentMode === "rooms";
 
-const SECTIONS = [
-  { title: "Land", fields: [
-    ["land","Land price","$","Whole block before any split"],
-    ["otherLand","Other QLD land the owners hold","$","Land value only. Used for land tax"],
-    ["subdivide","Split the block","seg",null,null,[["yes","Yes"],["no","No"]]],
-  ]},
-  { title: "Subdivision", show: isSub, fields: [
-    ["lots","Lots after the split","lots"],
-    ["lotsSell","Lots you sell","lots","The rest you keep and build on"],
-    ["lotPrice","Sale price per lot","$"],
-    ["subMonths","Time to get titles","mths"],
-    ["survey","Surveyor and town planner","$"],
-    ["councilFees","Council application fees","$"],
-    ["infraPerLot","Infrastructure charge per new lot","$","Council charges this on each extra lot"],
-    ["civil","Civil works","$","Driveways, earthworks, stormwater"],
-    ["connections","Water, sewer, power and NBN","$"],
-    ["titles","Legals and new titles","$"],
-  ]},
-  { title: "Build", fields: [
-    ["build","Build contract","$"],
-    ["furniture","Furniture and appliances","$","Beds, desks, fridges for each room"],
-    ["otherUpfront","Other upfront costs","$","Approvals, fencing, landscaping"],
-    ["buildMonths","Build time","mths"],
-    ["finishedValue","Value when finished","$","Kept lot plus house. Get a valuer, co-living can value under cost"],
-  ]},
-  { title: "Loan", fields: [
-    ["lvr","Loan to cost","%","Some lenders cap co-living at 70%"],
-    ["rate","Interest rate","%","Default for every investor"],
-    ["loanType","Repayments","seg",null,null,[["io","Interest only"],["pi","P and I"]]],
-    ["term","Loan term","yrs"],
-    ["payDown","Lot sale pays down loan","seg",null,isSub,[["yes","Yes"],["no","Take cash"]]],
-  ]},
-  { title: "Rent", fields: [
-    ["rentMode","Rent it","seg",null,null,[["rooms","By the room"],["whole","Whole house"]]],
-    ["rooms","Rooms","rooms",null,isRooms],
-    ["roomRent","Rent per room","$/wk",null,isRooms],
-    ["weeklyRent","Rent for the house","$/wk",null,p=>!isRooms(p)],
-    ["vacancyWeeks","Empty weeks a year","wks","Students leave over summer"],
-    ["pmPct","Property manager","%","Co-living managers charge 10 to 15%"],
-  ]},
-  { title: "Running costs per year", fields: [
-    ["councilRates","Council rates","$"],
-    ["water","Water","$"],
-    ["insurance","Landlord insurance","$"],
-    ["maintenance","Repairs and upkeep","$"],
-    ["utilities","Power and gas","$","Set to 0 if tenants pay bills"],
-    ["internet","Internet","$"],
-    ["cleaning","Cleaning and gardening","$"],
-  ]},
-  { title: "Tax and growth", fields: [
-    ["taxRate","Tax rate incl Medicare","%","Default for every investor"],
-    ["valueGrowth","Value growth a year","%"],
-    ["rentGrowth","Rent growth a year","%"],
-    ["costGrowth","Cost growth a year","%"],
-    ["fittingsDep","Fittings depreciation year 1","$","Drops 20% each year"],
-    ["sellCostPct","Selling costs","%"],
-  ]},
-];
-
+// QLD transfer duty, general rate (QRO, current at Oct 2026)
 function qldDuty(v){
   if (v <= 5000) return 0;
   if (v <= 75000) return (v-5000)*0.015;
@@ -182,12 +152,14 @@ function qldDuty(v){
   if (v <= 1000000) return 17325 + (v-540000)*0.045;
   return 38025 + (v-1000000)*0.0575;
 }
+// QLD land tax, individuals (QRO, current at Oct 2026). Co-owned land is assessed together as one owner first.
 function qldLandTax(v){
   if (v < 600000) return 0;
   if (v < 1000000) return 500 + (v-600000)*0.01;
   if (v < 3000000) return 4500 + (v-1000000)*0.0165;
   if (v < 5000000) return 37500 + (v-3000000)*0.0125;
-  return 62500 + (v-5000000)*0.0175;
+  if (v < 10000000) return 62500 + (v-5000000)*0.0175;
+  return 150000 + (v-10000000)*0.0225;
 }
 function irr(flows){
   if (!(flows[0] < 0)) return null;
@@ -198,11 +170,15 @@ function irr(flows){
   return (lo+hi)/2;
 }
 function investorsOf(p){
-  const cnt = Math.min(10, Math.max(1, Math.round(num(p.investorCount))||1));
+  const cnt = clamp(Math.round(num(p.investorCount))||1, 1, 10);
+  const builderIdx = clamp(Math.round(num(p.builder)), 0, cnt-1);
   const list = [];
   for (let i=0;i<cnt;i++){
     const iv = (p.investors||[])[i] || {};
-    list.push({ i, name: iv.name || `Investor ${i+1}`, share: p.splitMode==="equal" ? 100/cnt : num(iv.share), rateRaw: iv.rate ?? "", taxRaw: iv.tax ?? "" });
+    let fund = ["loan","boots","cash","undecided"].includes(iv.fund) ? iv.fund : "loan";
+    if (i===builderIdx && fund==="boots") fund = "loan";
+    list.push({ i, name: (iv.name||"").trim() || `Investor ${i+1}`, share: p.splitMode==="equal" ? 100/cnt : num(iv.share),
+      rateRaw: iv.rate ?? "", taxRaw: iv.tax ?? "", fund, isBuilder: i===builderIdx });
   }
   const tot = list.reduce((s,x)=>s+x.share,0);
   list.forEach(x=>{
@@ -210,98 +186,161 @@ function investorsOf(p){
     x.rate = x.rateRaw==="" ? num(p.rate) : num(x.rateRaw);
     x.tax = x.taxRaw==="" ? num(p.taxRate) : num(x.taxRaw);
   });
-  return { list, shareTotal: tot };
+  return { list, shareTotal: tot, builderIdx };
 }
 
 function run(p, o={}){
   const n = k => num(p[k]);
   const rateAdd = o.rateAdd || 0;
-  const land=n("land"), build=n("build"), lvr=n("lvr")/100;
+  const land=n("land"), lvr=clamp(n("lvr"),0,100)/100, sellPct=n("sellCostPct")/100;
   const sub = isSub(p);
   const lots = sub ? Math.max(1, Math.round(n("lots"))) : 1;
-  const sell = sub ? Math.min(lots-1, Math.max(0, Math.round(n("lotsSell")))) : 0;
+  const sell = sub ? clamp(Math.round(n("lotsSell")), 0, lots-1) : 0;
   const keep = lots - sell;
 
   const duty = qldDuty(land);
   const subCosts = sub ? n("survey")+n("councilFees")+n("civil")+n("connections")+n("titles")+n("infraPerLot")*(lots-1) : 0;
+  const buildCost = n("build")*(1+n("contingency")/100) + n("bootsFee");
+  const plant = Math.min(n("plant"), buildCost);
+  const furniture=n("furniture"), other=n("otherUpfront"), loanFees=n("loanFees");
   const perLot = (land + duty + subCosts) / lots;
-  const totalCost = land + duty + subCosts + build + n("furniture") + n("otherUpfront");
-  const loanStart = (land + subCosts + build) * lvr;
-
-  const holdAt = r => {
-    const subInt = sub ? (land + subCosts/2) * lvr * r * n("subMonths")/12 : 0;
-    const landLoanAfter = (land + subCosts) * lvr * keep/lots;
-    const buildInt = (landLoanAfter + build*lvr*0.5) * r * n("buildMonths")/12;
-    return { subInt, buildInt };
-  };
+  const totalCost = land + duty + subCosts + buildCost + furniture + other + loanFees;
+  const bankable = land + subCosts + buildCost;
+  const saving = Math.max(0, n("buildRetail") - buildCost);
 
   const saleGross = sell * n("lotPrice");
-  const saleNetPre = saleGross * (1 - n("sellCostPct")/100);
+  const saleNetPre = saleGross * (1 - sellPct);
   const lotProfit = saleNetPre - sell*perLot;
 
   const weeklyRent = isRooms(p) ? n("rooms")*n("roomRent") : n("weeklyRent");
   const keptLand = land*keep/lots;
-  const startValue = n("finishedValue") || keep*perLot + build;
-  let fit = n("fittingsDep") + n("furniture")*0.15, cwTotal = 0;
+  const startValue = n("finishedValue") || keep*perLot + buildCost;
+
+  // timeline (months from start)
+  const settleAt = Math.max(0, n("settleMonths"));
+  const subMonths = sub ? Math.max(0, n("subMonths")) : 0;
+  const titlesAt = settleAt + subMonths;
+  const buildMonths = Math.max(0.5, n("buildMonths"));
+  const buildStartAt = (p.buildStart==="titles" && sub) ? titlesAt : settleAt;
+  const buildEnd = buildStartAt + buildMonths;
+  const leaseUp = Math.max(0, n("leaseUpMonths"));
+  const rentStart = buildEnd + leaseUp;
+  const lotSaleAt = titlesAt + Math.max(0, n("lotSettleMonths"));
+
+  // whole-property yearly figures
+  let plantBal = plant + furniture, capWorksClaimed = 0;
+  const capWorks = (buildCost - plant) * 0.025;
   const base = [];
   for (let y=1; y<=10; y++){
     const g = x => Math.pow(1+x/100, y-1);
     const rent = weeklyRent * Math.max(0, 52 - n("vacancyWeeks")) * g(n("rentGrowth"));
     const lv = keptLand*g(n("valueGrowth")), ov = n("otherLand")*g(n("valueGrowth"));
     const landTax = qldLandTax(lv+ov) - qldLandTax(ov);
-    const running = (n("councilRates")+n("water")+n("insurance")+n("maintenance")+n("utilities")+n("internet")+n("cleaning"))*g(n("costGrowth"));
+    const running = (n("councilRates")+n("water")+n("insurance")+n("maintenance")+n("utilities")+n("internet")+n("cleaning")+n("lettingFees"))*g(n("costGrowth"));
     const pm = rent*n("pmPct")/100;
-    const cw = build*0.025; cwTotal += cw;
-    const dep = cw + fit; fit *= 0.8;
-    base.push({ y, rent, pm, running, landTax, costs: pm+running+landTax, dep, value: startValue*Math.pow(1+n("valueGrowth")/100, y) });
+    const dep = capWorks + plantBal*0.2; plantBal *= 0.8; capWorksClaimed += capWorks;
+    base.push({ y, rent, pm, running, landTax, costs: pm+running+landTax, dep, capClaimed: capWorksClaimed, value: startValue*Math.pow(1+n("valueGrowth")/100, y) });
   }
 
-  const { list, shareTotal } = investorsOf(p);
+  const { list, shareTotal, builderIdx } = investorsOf(p);
+  const bootsYears = Math.max(1, Math.round(n("bootsYears")));
+  const bootsRate = Math.max(0, n("bootsRate"))/100;
+  const Y = clamp(Math.round(n("sellYear"))||10, 1, 10);
+
+  // pass 1: each person's loan, debt to the builder, holding costs
   const inv = list.map(iv => {
     const s = iv.s, rPct = iv.rate + rateAdd, r = rPct/100, tax = iv.tax/100;
-    const h = holdAt(r);
-    const hold = s*(h.subInt + h.buildInt);
-    const lotTax = Math.max(0, s*lotProfit) * tax;
+    const owes = iv.fund === "boots";
+    const bankL = iv.fund==="cash" ? 0 : lvr;             // bank share of land and subdivision
+    const bankB = (iv.fund==="cash" || owes) ? 0 : lvr;    // bank share of the build
+    const loan0 = s*(bankL*(land+subCosts) + bankB*buildCost);
+    const debt0 = owes ? s*buildCost : 0;
+    const subInt = sub ? s*bankL*(land + subCosts/2)*r*subMonths/12 : 0;
+    const landLoanDuringBuild = s*bankL*(land+subCosts) * ((p.payDown==="yes" && sell>0) ? keep/lots : 1);
+    const buildInt = (landLoanDuringBuild + s*bankB*buildCost*0.5)*r*buildMonths/12;
+    const hold = subInt + buildInt, holdTaxBack = hold*tax;
+    const lotTax = Math.max(0, s*lotProfit)*tax;
     const lotCash = s*saleNetPre - lotTax;
-    const loan0 = s*loanStart;
     let loan = loan0, cashBack = 0;
     if (sell > 0){
       if (p.payDown==="yes" && lotCash>0){ const pay = Math.min(loan, lotCash); loan -= pay; cashBack = lotCash - pay; }
       else cashBack = lotCash;
     }
-    const cashIn = s*totalCost - loan0 + hold - cashBack;
-    const mr = r/12, nm = Math.max(1, n("term")*12);
-    const pmt = p.loanType==="pi" ? (mr===0 ? loan/nm : loan*mr/(1-Math.pow(1+mr,-nm))) : 0;
-    let bal = loan, prevV = s*startValue;
-    const rows = base.map(b => {
+    // repayments to the builder, weekly P and I, as yearly totals
+    let sched = null;
+    if (owes && debt0>0){
+      sched = []; let bal = debt0; const wr = bootsRate/52, nw = bootsYears*52;
+      const pmt = wr===0 ? bal/nw : bal*wr/(1-Math.pow(1+wr,-nw));
+      for (let y=1;y<=10;y++){ let i=0, pr=0; if (y<=bootsYears){ for (let w=0;w<52;w++){ const ii=bal*wr; i+=ii; const pp=Math.min(bal, Math.max(0,pmt-ii)); pr+=pp; bal-=pp; } } sched.push({int:i, prin:pr, bal}); }
+      sched.weekly = pmt;
+    }
+    const stages = {
+      settle: s*(land*(1-bankL) + duty + loanFees),
+      sub: s*subCosts*(1-bankL) + subInt,
+      build: s*buildCost*(1-bankB) - debt0 + buildInt,
+      fitout: s*(furniture + other),
+      lotBack: -cashBack,
+      taxBack: -holdTaxBack,
+    };
+    const cashIn = stages.settle + stages.sub + stages.build + stages.fitout + stages.lotBack + stages.taxBack;
+    return { ...iv, rPct, r, tax, owes, loan0, loan, debt0, subInt, buildInt, hold, holdTaxBack, lotTax, lotCash, cashBack, sched, stages, cashIn, fronted:0 };
+  });
+
+  // pass 2: the builder fronts the build for anyone who owes
+  const builder = inv[builderIdx];
+  const owers = inv.filter(x=>x.owes && x.sched);
+  builder.fronted = owers.reduce((a,x)=>a+x.debt0,0);
+  builder.stages.build += builder.fronted;
+  builder.cashIn += builder.fronted;
+
+  // pass 3: yearly rows for each person
+  inv.forEach(iv => {
+    const s=iv.s, r=iv.r, tax=iv.tax, mr=r/12, nm=Math.max(1, n("term")*12);
+    const pmt = p.loanType==="pi" ? (mr===0 ? iv.loan/nm : iv.loan*mr/(1-Math.pow(1+mr,-nm))) : 0;
+    let bal = iv.loan, prevV = s*startValue;
+    iv.rows = base.map((b,yi) => {
       let interest=0, principal=0;
       if (p.loanType==="pi"){ for (let m=0;m<12;m++){ const i=bal*mr; interest+=i; const pr=Math.min(bal,Math.max(0,pmt-i)); principal+=pr; bal-=pr; } }
       else interest = bal*r;
-      const rent=s*b.rent, costs=s*b.costs, landTax=s*b.landTax, pm=s*b.pm, running=s*b.running, dep=s*b.dep;
-      const taxBack = -(rent - costs - interest - dep) * tax;
-      const before = rent - costs - interest - principal;
+      const bootsInt = iv.sched ? iv.sched[yi].int : 0, bootsPrin = iv.sched ? iv.sched[yi].prin : 0, bootsBal = iv.sched ? iv.sched[yi].bal : 0;
+      let recvInt=0, recvPrin=0, recvBal=0;
+      if (iv.isBuilder) owers.forEach(x=>{ recvInt+=x.sched[yi].int; recvPrin+=x.sched[yi].prin; recvBal+=x.sched[yi].bal; });
+      const rent=s*b.rent, pm=s*b.pm, running=s*b.running, landTax=s*b.landTax, costs=s*b.costs, dep=s*b.dep;
+      const borrowCost = yi<5 ? s*loanFees/5 : 0;
+      const taxable = rent - costs - interest - bootsInt - dep - borrowCost + recvInt;
+      const taxBack = -taxable*tax;
+      const before = rent - costs - interest - principal - bootsInt - bootsPrin + recvInt + recvPrin;
       const after = before + taxBack;
-      const value = s*b.value, gain = after + value - prevV; prevV = value;
-      return { y:b.y, rent, pm, running, costs, landTax, interest, principal, before, taxBack, after, value, bal, equity: value-bal, gain };
+      const value = s*b.value;
+      const equity = value - bal - bootsBal + recvBal;
+      const gain = after + (value - prevV); prevV = value;
+      return { y:b.y, rent, pm, running, landTax, costs, interest, principal, bootsInt, bootsPrin, bootsBal, recvInt, recvPrin, recvBal, dep, taxBack, before, after, value, bal, equity, gain };
     });
-    const last = rows[9];
-    const sellGross = last.value*(1 - n("sellCostPct")/100);
-    const costBase = s*(keep*perLot + build + n("furniture") + n("otherUpfront") - cwTotal) + s*h.buildInt;
-    const cgt = Math.max(0, sellGross - costBase) * 0.5 * tax;
-    const saleNet = sellGross - last.bal - cgt;
-    const profit = saleNet + rows.reduce((a,x)=>a+x.after,0) - cashIn;
-    const flows = [-cashIn, ...rows.map((x,i)=>x.after + (i===9 ? saleNet : 0))];
-    return { ...iv, rPct, loan0, loan, hold, subInt:s*h.subInt, buildInt:s*h.buildInt, lotTax, lotCash, cashBack, cashIn, rows, cgt, saleNet, profit, flows, irr: irr(flows), weeklyRepay:(rows[0].interest+rows[0].principal)/52 };
+    const last = iv.rows[Y-1];
+    const sellGross = last.value*(1-sellPct);
+    const costBase = s*(keep*perLot + buildCost + furniture + other - base[Y-1].capClaimed);
+    iv.cgt = Math.max(0, sellGross - costBase)*0.5*tax;
+    iv.saleNet = sellGross - last.bal - last.bootsBal + last.recvBal - iv.cgt;
+    iv.profit = iv.rows.slice(0,Y).reduce((a,x)=>a+x.after,0) + iv.saleNet - iv.cashIn;
+    iv.flows = [-iv.cashIn, ...iv.rows.slice(0,Y).map((x,i)=>x.after + (i===Y-1 ? iv.saleNet : 0))];
+    iv.irr = irr(iv.flows);
+    iv.weeklyRepay = (iv.rows[0].interest + iv.rows[0].principal)/52;
+    iv.weeklyBoots = iv.sched ? iv.sched.weekly : 0;
+    iv.weeklyRecv = iv.isBuilder ? (iv.rows[0].recvInt + iv.rows[0].recvPrin)/52 : 0;
   });
 
   const sum = f => inv.reduce((a,x)=>a+x[f],0);
-  const keys = ["rent","pm","running","costs","landTax","interest","principal","before","taxBack","after","value","bal","equity","gain"];
-  const rows = base.map((b,i) => { const o={y:b.y}; keys.forEach(k=>o[k]=inv.reduce((a,x)=>a+x.rows[i][k],0)); return o; });
+  const keys = ["rent","pm","running","landTax","costs","interest","principal","bootsInt","bootsPrin","bootsBal","recvInt","recvPrin","recvBal","dep","taxBack","before","after","value","bal","equity","gain"];
+  const rows = base.map((b,i)=>{ const o={y:b.y}; keys.forEach(k=>o[k]=inv.reduce((a,x)=>a+x.rows[i][k],0)); return o; });
   const flows = inv[0].flows.map((_,i)=>inv.reduce((a,x)=>a+x.flows[i],0));
-  return { duty, subCosts, totalCost, loanStart, loan:sum("loan"), subInt:sum("subInt"), buildInt:sum("buildInt"), holdInt:sum("hold"),
-    cashIn:sum("cashIn"), lotTax:sum("lotTax"), cashBack:sum("cashBack"), cgt:sum("cgt"), saleNet:sum("saleNet"), profit:sum("profit"),
-    weeklyRepay:sum("weeklyRepay"), irr: irr(flows), rows, inv, shareTotal, sell, keep, lots, saleGross, lotProfit, weeklyRent,
-    grossYield: (weeklyRent*52)/((keep*perLot) + build) };
+  const stageTotals = {}; ["settle","sub","build","fitout","lotBack","taxBack"].forEach(k=>stageTotals[k]=inv.reduce((a,x)=>a+x.stages[k],0));
+
+  return { duty, subCosts, buildCost, saving, totalCost, bankable, loanStart:sum("loan0"), loan:sum("loan"), owed:sum("debt0"), fronted:builder.fronted,
+    holdInt:sum("hold"), holdTaxBack:sum("holdTaxBack"), cashIn:sum("cashIn"), lotTax:sum("lotTax"), cashBack:sum("cashBack"),
+    cgt:sum("cgt"), saleNet:sum("saleNet"), profit:sum("profit"), weeklyRepay:sum("weeklyRepay"), irr: irr(flows),
+    rows, inv, builder, owers, shareTotal, sell, keep, lots, perLot, saleGross, lotProfit, weeklyRent, Y, stageTotals,
+    grossYield: (weeklyRent*52)/(keep*perLot + buildCost),
+    tl: { settleAt, subMonths, titlesAt, buildStartAt, buildEnd, leaseUp, rentStart, lotSaleAt, buildMonths, sub, sell, bootsYears, hasOwers: owers.length>0 } };
 }
 
 function breakeven(p, target){
@@ -313,10 +352,34 @@ function breakeven(p, target){
   return hi;
 }
 
+// monthly cumulative cash the group needs
+function cashSeries(R){
+  const t = R.tl, st = R.stageTotals;
+  const end = Math.ceil(t.rentStart) + 1;
+  const out = new Array(end+1).fill(0);
+  const add = (m, v) => { const i = clamp(Math.round(m), 0, end); out[i] += v; };
+  const spread = (a, b, v) => { const n = Math.max(1, Math.round(b-a)); for (let i=0;i<n;i++) add(a+i+1, v/n); };
+  add(t.settleAt, st.settle);
+  if (t.sub) spread(t.settleAt, t.titlesAt, st.sub);
+  spread(t.buildStartAt, t.buildEnd, st.build);
+  add(t.buildEnd, st.fitout);
+  if (t.sell) add(t.lotSaleAt, st.lotBack);
+  add(t.rentStart, st.taxBack);
+  let c=0; return out.map(v => c += v);
+}
+// ==== UI ====
 const money = v => (v<0?"−":"") + "$" + Math.round(Math.abs(v)).toLocaleString("en-AU");
 const signed = v => (v>0?"+":"") + money(v);
 const cls = v => v<0 ? "neg" : "pos";
 const pct = v => v===null || v===undefined ? "n/a" : (v*100).toFixed(1)+"%";
+const mths = m => { const r = Math.round(m*2)/2; return r + (r===1 ? " month" : " months"); };
+function monthLabel(startMonth, m){
+  const parts = String(startMonth||"2026-11").split("-").map(Number);
+  const y = parts[0]||2026, mo = (parts[1]||1)-1;
+  const d = new Date(y, mo + Math.round(m), 1);
+  return d.toLocaleString("en-AU",{month:"short"}) + " " + String(d.getFullYear()).slice(2);
+}
+const FUND = { loan:"Bank loan", boots:"Owes builder", cash:"Own cash", undecided:"Not decided" };
 
 function Group({title, right, footer, warn, children}){
   return (
@@ -327,7 +390,7 @@ function Group({title, right, footer, warn, children}){
     </section>
   );
 }
-function NumRow({id,label,hint,unit,value,onChange,placeholder,text}){
+function NumRow({id,label,hint,unit,value,onChange,placeholder,text,month}){
   const pre = unit && unit.startsWith("$");
   const post = unit==="$" ? "" : unit && unit.startsWith("$") ? unit.slice(1) : unit;
   return (
@@ -335,7 +398,7 @@ function NumRow({id,label,hint,unit,value,onChange,placeholder,text}){
       <span className="lbl">{label}{hint && <span className="hint">{hint}</span>}</span>
       <span className="inp">
         {pre && <span className="u">$</span>}
-        <input id={id} className={text?"name":""} type={text?"text":"number"} inputMode={text?"text":"decimal"} value={value} placeholder={placeholder} onChange={e=>onChange(e.target.value)} />
+        <input id={id} className={text?"name":month?"month":""} type={text?"text":month?"month":"number"} inputMode={text||month?"text":"decimal"} value={value} placeholder={placeholder} onChange={e=>onChange(e.target.value)} />
         {post && <span className="u">&nbsp;{post}</span>}
       </span>
     </label>
@@ -356,12 +419,28 @@ function SegRow({label,hint,options,value,onChange}){
     </div>
   );
 }
+function SelectRow({id,label,hint,options,value,onChange}){
+  return (
+    <div className="row">
+      <label className="lbl" htmlFor={id}>{label}{hint && <span className="hint">{hint}</span>}</label>
+      <span className="selectwrap"><select id={id} value={value} onChange={e=>onChange(e.target.value)}>{options.map(([v,t])=><option key={v} value={v}>{t}</option>)}</select></span>
+    </div>
+  );
+}
 function Val({label,hint,value,c,strong}){
   return (
     <div className="row">
       <span className="lbl">{label}{hint && <span className="hint">{hint}</span>}</span>
       <span className={"val"+(strong?" strong":"")+(c?" "+c:"")}>{value}</span>
     </div>
+  );
+}
+function Check({id,label,hint,checked,onChange}){
+  return (
+    <label className="check" htmlFor={id}>
+      <input id={id} type="checkbox" checked={!!checked} onChange={e=>onChange(e.target.checked)} />
+      <span className="lbl"><span>{label}</span>{hint && <span className="hint">{hint}</span>}</span>
+    </label>
   );
 }
 
@@ -390,22 +469,105 @@ function Chart({rows, cashIn}){
   );
 }
 
-function YearTable({rows, pi}){
+function Gantt({tl, startMonth}){
+  const stages = [
+    { label:"Buy the block", a:0, b:tl.settleAt, c:"var(--blue)" },
+    tl.sub && { label:"Subdivision", a:tl.settleAt, b:tl.titlesAt, c:"var(--purple)" },
+    tl.sell && { label:"Sell spare lot", a:tl.titlesAt, b:tl.lotSaleAt, c:"var(--green)" },
+    { label:"Build", a:tl.buildStartAt, b:tl.buildEnd, c:"var(--orange)" },
+    { label:"Furnish, find tenants", a:tl.buildEnd, b:tl.rentStart, c:"var(--blue)" },
+  ].filter(Boolean);
+  const total = Math.max(6, Math.ceil(tl.rentStart) + 1);
+  const W=640, L=150, rowH=34, T=30, B=8, H=T+stages.length*rowH+B;
+  const x = m => L + (W-L-14)*m/total;
+  const step = total<=14 ? 1 : total<=30 ? 2 : 3;
+  const ticks = []; for (let m=0;m<=total;m+=step) ticks.push(m);
+  const marks = [ tl.sub && {label:"Titles", at:tl.titlesAt}, {label:"First rent", at:tl.rentStart} ].filter(Boolean);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:560,display:"block"}} role="img" aria-label="Build timeline">
+      {ticks.map(m=>(<g key={m}>
+        <line x1={x(m)} x2={x(m)} y1={T-6} y2={H-B} stroke="var(--sep)" />
+        <text x={x(m)} y={T-12} textAnchor="middle">{monthLabel(startMonth,m)}</text>
+      </g>))}
+      {stages.map((s,i)=>{ const y0=T+i*rowH; const w=Math.max(4, x(s.b)-x(s.a)); return (<g key={s.label}>
+        <text x={L-10} y={y0+rowH/2+4} textAnchor="end" style={{fill:"var(--label)",fontSize:12.5}}>{s.label}</text>
+        <rect x={x(s.a)} y={y0+7} width={w} height={rowH-14} rx="6" fill={s.c} opacity=".85" />
+        <text x={x(s.a)+w+6} y={y0+rowH/2+4} style={{fontSize:11}}>{mths(s.b-s.a)}</text>
+      </g>); })}
+      {marks.map(m=>(<g key={m.label}>
+        <line x1={x(m.at)} x2={x(m.at)} y1={T-4} y2={H-B} stroke="var(--label)" strokeDasharray="3 3" opacity=".7"/>
+        <text x={x(m.at)+4} y={H-B-2} style={{fill:"var(--label)",fontWeight:600}}>{m.label}</text>
+      </g>))}
+    </svg>
+  );
+}
+
+function YearStrip({tl, Y, loanType, builderName}){
+  const rows = [
+    tl.hasOwers && { label:`Pay ${builderName} back`, a:0, b:tl.bootsYears, c:"var(--purple)" },
+    loanType==="io" && { label:"Interest only period", a:0, b:5, c:"var(--blue)" },
+    { label:"Own and rent it", a:0, b:Y, c:"var(--green)" },
+  ].filter(Boolean);
+  const W=640, L=150, rowH=30, T=26, B=8, H=T+rows.length*rowH+B;
+  const x = y => L + (W-L-14)*y/10;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:560,display:"block"}} role="img" aria-label="Ten year plan">
+      {Array.from({length:11},(_,i)=>i).map(i=>(<g key={i}>
+        <line x1={x(i)} x2={x(i)} y1={T-6} y2={H-B} stroke="var(--sep)"/>
+        <text x={x(i)} y={T-12} textAnchor="middle">{i===0?"Rent starts":"Yr "+i}</text>
+      </g>))}
+      {rows.map((s,i)=>{ const y0=T+i*rowH; return (<g key={s.label}>
+        <text x={L-10} y={y0+rowH/2+4} textAnchor="end" style={{fill:"var(--label)",fontSize:12.5}}>{s.label}</text>
+        <rect x={x(s.a)} y={y0+6} width={Math.max(4,x(s.b)-x(s.a))} height={rowH-12} rx="6" fill={s.c} opacity=".85"/>
+      </g>); })}
+      <line x1={x(Y)} x2={x(Y)} y1={T-4} y2={H-B} stroke="var(--label)" strokeDasharray="3 3" opacity=".7"/>
+      <text x={x(Y)-4} y={H-B-2} textAnchor="end" style={{fill:"var(--label)",fontWeight:600}}>Sell or review</text>
+    </svg>
+  );
+}
+
+function CashLine({series, startMonth}){
+  const W=560,H=200,L=56,B=24,T=12;
+  const max = Math.max(...series, 1)*1.1, min = Math.min(0, ...series);
+  const y = v => T + (H-T-B)*(1-(v-min)/(max-min));
+  const x = i => L + (W-L-10)*i/Math.max(1, series.length-1);
+  const step = Math.pow(10, Math.floor(Math.log10(max/3))), tick = Math.ceil(max/3/step)*step;
+  const pts = series.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+  const lab = series.length<=14 ? 1 : series.length<=30 ? 3 : 6;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:380,display:"block"}} role="img" aria-label="Cash needed over time">
+      {[0,1,2,3].map(i=>tick*i<=max && (<g key={i}>
+        <line x1={L} x2={W-4} y1={y(tick*i)} y2={y(tick*i)} stroke="var(--sep)"/>
+        <text x={L-8} y={y(tick*i)+4} textAnchor="end">{"$"+Math.round(tick*i/1000)+"k"}</text>
+      </g>))}
+      <polyline points={pts} fill="none" stroke="var(--blue)" strokeWidth="2.5" strokeLinejoin="round"/>
+      <polygon points={`${x(0)},${y(0)} ${pts} ${x(series.length-1)},${y(0)}`} fill="var(--blue)" opacity=".08"/>
+      {series.map((v,i)=> i%lab===0 && <text key={i} x={x(i)} y={H-6} textAnchor="middle">{monthLabel(startMonth,i)}</text>)}
+      <circle cx={x(series.length-1)} cy={y(series[series.length-1])} r="4" fill="var(--blue)"/>
+    </svg>
+  );
+}
+
+function YearTable({rows, pi, showBoots, showRecv}){
   return (
     <div className="tablebox">
       <table>
         <thead><tr>
-          <th>Year</th><th>Rent</th><th>Costs</th><th>Land tax</th><th>Interest</th>{pi&&<th>Principal</th>}<th>Before tax</th><th>Tax back</th><th>After tax</th><th>Per week</th><th>Value</th><th>Loan</th><th>Equity</th><th>Gain</th>
+          <th>Year</th><th>Rent</th><th>Costs</th><th>Land tax</th><th>Bank interest</th>{pi&&<th>Principal</th>}
+          {showBoots&&<th>To builder</th>}{showRecv&&<th>From others</th>}
+          <th>Before tax</th><th>Tax back</th><th>After tax</th><th>Per week</th><th>Value</th><th>Bank loan</th>{showBoots&&<th>Owed builder</th>}<th>Equity</th><th>Gain</th>
         </tr></thead>
         <tbody>{rows.map(r=>(
           <tr key={r.y}>
             <td>{r.y}</td><td>{money(r.rent)}</td><td>{money(r.costs-r.landTax)}</td><td>{money(r.landTax)}</td><td>{money(r.interest)}</td>
             {pi&&<td>{money(r.principal)}</td>}
+            {showBoots&&<td>{money(r.bootsInt+r.bootsPrin)}</td>}
+            {showRecv&&<td className="pos">{money(r.recvInt+r.recvPrin)}</td>}
             <td className={cls(r.before)}>{money(r.before)}</td>
             <td className={cls(r.taxBack)}>{money(r.taxBack)}</td>
             <td className={cls(r.after)}>{money(r.after)}</td>
             <td className={cls(r.after)}>{money(r.after/52)}</td>
-            <td>{money(r.value)}</td><td>{money(r.bal)}</td><td>{money(r.equity)}</td>
+            <td>{money(r.value)}</td><td>{money(r.bal)}</td>{showBoots&&<td>{money(r.bootsBal)}</td>}<td>{money(r.equity)}</td>
             <td className={cls(r.gain)}>{money(r.gain)}</td>
           </tr>))}
         </tbody>
@@ -414,20 +576,102 @@ function YearTable({rows, pi}){
   );
 }
 
+const SECTIONS = [
+  { title: "Land", fields: [
+    ["land","Land price","$","Whole block before any split. Brisbane houses now sit over $1m, outer areas less"],
+    ["otherLand","Other QLD land the owners hold","$","Land value only. Used for land tax"],
+    ["subdivide","Split the block","seg",null,null,[["yes","Yes"],["no","No"]]],
+  ]},
+  { title: "Subdivision", show: isSub, fields: [
+    ["lots","Lots after the split","lots"],
+    ["lotsSell","Lots you sell","lots","The rest you keep and build on"],
+    ["lotPrice","Sale price per lot","$"],
+    ["survey","Surveyor and town planner","$"],
+    ["councilFees","Council application fees","$"],
+    ["infraPerLot","Infrastructure charge per new lot","$","Brisbane City Council is $18,793 from July 2026. Logan and Moreton Bay are closer to $30k"],
+    ["civil","Civil works","$","Driveways, earthworks, stormwater"],
+    ["connections","Water, sewer, power and NBN","$"],
+    ["titles","Legals and new titles","$"],
+  ]},
+  { title: "Build", fields: [
+    ["build","Build cost with the builder in the group","$","What it actually costs to build, not a retail quote"],
+    ["buildRetail","What an outside builder would charge","$","For comparison only. 5 bed 5 bath co-living in QLD runs about $650k to $800k"],
+    ["bootsFee","Fee paid to the builder for his work","$","0 means he builds at cost. Any fee is shared by everyone and goes to him"],
+    ["contingency","Contingency on the build","%","Builds run over. 5 to 10% is normal"],
+    ["plant","Fittings inside the build price","$","Air con, hot water, appliances, carpet, blinds. Depreciates faster than the building"],
+    ["furniture","Furniture","$","Beds, desks, fridges for each room"],
+    ["otherUpfront","Other upfront costs","$","Approvals, fencing, landscaping"],
+    ["finishedValue","Value when finished","$","Kept lot plus house. Get a valuer. Co-living often values as a normal 5 bed house"],
+  ]},
+  { title: "Loan", fields: [
+    ["lvr","Loan to cost","%","Some lenders cap co-living at 70%"],
+    ["rate","Interest rate","%","Investor interest only sits around 7.1% after the Sept 2026 RBA rise. Each person can override this"],
+    ["loanType","Repayments","seg",null,null,[["io","Interest only"],["pi","P and I"]]],
+    ["term","Loan term","yrs"],
+    ["loanFees","Loan setup fees","$","Application, valuation. Add LMI here if borrowing over 80%"],
+    ["payDown","Lot sale pays down loan","seg",null,isSub,[["yes","Yes"],["no","Take cash"]]],
+  ]},
+  { title: "Rent", fields: [
+    ["rentMode","Rent it","seg",null,null,[["rooms","By the room"],["whole","Whole house"]]],
+    ["rooms","Rooms","rooms",null,isRooms],
+    ["roomRent","Rent per room","$/wk","Brisbane co-living rooms rent for $350 to $420 a week with bills in",isRooms],
+    ["weeklyRent","Rent for the house","$/wk",null,p=>!isRooms(p)],
+    ["vacancyWeeks","Empty weeks a year","wks","Across all rooms. Students leave over summer"],
+    ["pmPct","Property manager","%","Normal QLD rate is 7.5%. Co-living specialists charge 10 to 15%"],
+    ["lettingFees","Letting fees a year","$","About one week's rent each time a room turns over"],
+  ]},
+  { title: "Running costs per year", fields: [
+    ["councilRates","Council rates","$","Investor rates are higher than owner occupier"],
+    ["water","Water","$"],
+    ["insurance","Landlord insurance","$","QLD average house is about $2,500. Rooming cover costs more"],
+    ["maintenance","Repairs and upkeep","$"],
+    ["utilities","Power and gas","$","Co-living rent usually includes bills. Put 0 if tenants pay"],
+    ["internet","Internet","$"],
+    ["cleaning","Cleaning and gardening","$"],
+  ]},
+  { title: "Tax and growth", fields: [
+    ["taxRate","Tax rate incl Medicare","%","2026-27: 32% on income $45k to $135k, 39% to $190k, 47% above. Each person can override"],
+    ["valueGrowth","Value growth a year","%"],
+    ["rentGrowth","Rent growth a year","%"],
+    ["costGrowth","Cost growth a year","%"],
+    ["sellCostPct","Selling costs","%"],
+    ["sellYear","Sell or review in year","yr","1 to 10. Profit and return are worked out to this year"],
+  ]},
+];
+
+const SOURCES = [
+  ["RBA cash rate 4.60% from 29 Sep 2026. Investor interest only rates 6.6% to 7.5%", "Property Investment Professionals, 10 Oct 2026", "https://propertyinvestmentprofessionals.com.au/blog/interest-only-vs-principal-interest-investment-loan-australia-2026"],
+  ["Investment loan rate guide, interest only costs 0.2 to 0.6% more than P and I", "Propboss 2026 guide", "https://www.propboss.com.au/blog/investment-loan-rates-australia-guide-2026"],
+  ["QLD transfer duty rates", "Queensland Revenue Office", "https://qro.qld.gov.au/duties/transfer-duty/calculating/rates/"],
+  ["QLD land tax rates for individuals, $600k threshold, co-owned land counts", "Queensland Revenue Office", "https://qro.qld.gov.au/land-tax/calculate/individual/"],
+  ["Income tax brackets 2026-27 and 2% Medicare levy", "SuperGuide", "https://www.superguide.com.au/how-super-works/income-tax-rates-brackets"],
+  ["Rooming accommodation for 5 or fewer people can be accepted development in Brisbane if the zone and code allow", "Brisbane City Council", "https://www.brisbane.qld.gov.au/planning-and-building/do-i-need-approval/business-projects/rooming-accommodation"],
+  ["Brisbane infrastructure charge $18,793.33 per new residential lot from 1 July 2026", "Brisbane Infrastructure Charges Resolution No. 15", "https://www.brisbane.qld.gov.au/content/dam/brisbanecitycouncil/corpwebsite/building-and-planning/documents/brisbane-infrastructure-charges-resolution-no-15-2026.pdf"],
+  ["Subdivision costs in Logan ran $70k to $100k in 2018, about $28k of it infrastructure charges. Lifted for 2026", "PropertyChat", "https://www.propertychat.com.au/community/threads/brisbane-subdivision-cost-estimates.30934/"],
+  ["Brisbane co-living rooms $350 to $420 a week, up to 5 rooms, returns of 8% plus", "BLD Wealth", "https://www.bldwealth.com.au/co-living-property-investment-brisbane"],
+  ["Brisbane co-living about $300 a room, vacancy near 0.8%", "Invida", "https://invida.com.au/co-living-brisbane/"],
+  ["Student shared housing Brisbane $210 to $390 a week, bills on top", "ApplyBoard 2026", "https://assist.applyboard.com/hc/en-us/articles/47514309180941-Cost-of-Living-in-Brisbane-for-International-Students-2026"],
+  ["QLD property management about 7.5% of rent plus one week letting fee", "LocalAgentFinder 2026", "https://www.localagentfinder.com.au/blog/property-management-commission-fees"],
+  ["QLD landlord insurance averages $2,529 a year for a house, March 2026", "Canstar", "https://www.canstar.com.au/landlord-insurance/the-cost-of-landlord-insurance/"],
+  ["QLD build costs 2026, $1,900 to $2,600 a sqm mid range, more for high end", "HomeBuild HQ", "https://homebuildhq.au/blog/cost-to-build-house-qld-2026"],
+  ["Brisbane house median passed $1 million into 2026", "API Magazine", "https://www.apimagazine.com.au/news/article/brisbane-houses-power-past-1-million-median-as-price-growth-surges-into-2026"],
+];
+
 function App(){
   const [p,setP] = useState(()=>{
-    try { const s = JSON.parse(localStorage.getItem("qld-build-lease-v3")||"null"); if (s) return {...DEFAULTS,...s}; } catch(e){}
+    try { const s = JSON.parse(localStorage.getItem("qld-build-lease-v4")||"null"); if (s) return {...DEFAULTS,...s, checks:{...(s.checks||{})}}; } catch(e){}
     return DEFAULTS;
   });
   const [tab,setTab] = useState("summary");
   const [view,setView] = useState("all");
-  useEffect(()=>{ try{ localStorage.setItem("qld-build-lease-v3", JSON.stringify(p)); }catch(e){} },[p]);
+  useEffect(()=>{ try{ localStorage.setItem("qld-build-lease-v4", JSON.stringify(p)); }catch(e){} },[p]);
   const set = (k,v)=>setP(o=>({...o,[k]:v}));
-  const setInv = (i,k,v)=>setP(o=>{ const a=[...(o.investors||[])]; while(a.length<=i) a.push({name:`Investor ${a.length+1}`,share:0,rate:"",tax:""}); a[i]={...a[i],[k]:v}; return {...o,investors:a}; });
+  const setCheck = (k,v)=>setP(o=>({...o, checks:{...(o.checks||{}), [k]:v}}));
+  const setInv = (i,k,v)=>setP(o=>{ const a=[...(o.investors||[])]; while(a.length<=i) a.push({name:`Investor ${a.length+1}`,share:0,rate:"",tax:"",fund:"loan"}); a[i]={...a[i],[k]:v}; return {...o,investors:a}; });
   const setCount = c => setP(o=>{
-    c = Math.min(10, Math.max(1, c));
-    const a=[...(o.investors||[])]; while(a.length<c) a.push({name:`Investor ${a.length+1}`,share:Math.round(100/c),rate:"",tax:""});
-    return {...o, investorCount:c, investors:a};
+    c = clamp(c,1,10);
+    const a=[...(o.investors||[])]; while(a.length<c) a.push({name:`Investor ${a.length+1}`,share:Math.round(100/c),rate:"",tax:"",fund:"loan"});
+    return {...o, investorCount:c, investors:a, builder: clamp(num(o.builder),0,c-1)};
   });
 
   const R = useMemo(()=>run(p),[p]);
@@ -436,63 +680,91 @@ function App(){
   const stress = useMemo(()=>[
     ["Rates up 1%", run(p,{rateAdd:1})],
     ["Rates up 2%", run(p,{rateAdd:2})],
+    ["Build costs 15% more", run({...p, build:num(p.build)*1.15})],
     ["Rent down 10%", run({...p, roomRent:num(p.roomRent)*0.9, weeklyRent:num(p.weeklyRent)*0.9})],
     ["6 more empty weeks", run({...p, vacancyWeeks:num(p.vacancyWeeks)+6})],
     ["Growth only 2%", run({...p, valueGrowth:2})],
   ],[p]);
   const beBefore = useMemo(()=>breakeven(p,"before"),[p]);
   const beAfter = useMemo(()=>breakeven(p,"after"),[p]);
+  const series = useMemo(()=>cashSeries(R),[R]);
   const rentUnit = isRooms(p) ? "per room a week" : "a week";
   const multi = R.inv.length > 1;
-  const viewRows = view==="all" ? R.rows : (R.inv[+view]||R.inv[0]).rows;
+  const B = R.builder;
+  const undecided = R.inv.filter(x=>x.fund==="undecided");
+  const viewInv = view==="all" ? null : (R.inv[+view]||R.inv[0]);
+  const viewRows = viewInv ? viewInv.rows : R.rows;
+  const Y = R.Y;
+
+  const decisions = [
+    ...undecided.map(x=>({ id:`fund-${x.i}`, label:`How is ${x.name} paying for their ${(x.s*100).toFixed(0)}%?`, hint:`The numbers assume a bank loan for now. Pick Bank loan, Own cash or Owes ${B.name} on the People tab.` })),
+    R.owers.length>0 && { id:"loan-agreement", label:`Written loan agreement between ${B.name} and ${R.owers.map(x=>x.name).join(" and ")}`, hint:`${money(R.fronted)} fronted, paid back over ${R.tl.bootsYears} years at ${num(p.bootsRate)}%. Put the amount, rate, repayments and what happens if someone sells in writing.` },
+    { id:"co-own", label:"Co-ownership agreement for all four", hint:"Who decides what, how someone exits, what happens if one person can't pay, how profits and losses are split. Tenants in common lets each person claim their own share of the loss." },
+    num(p.bootsFee)===0 && { id:"boots-fee", label:`${B.name} builds at cost with no fee. Is everyone happy with that?`, hint:`The group saves about ${money(R.saving)} against an outside builder. Decide if ${B.name} gets paid for his time or a bigger share.` },
+    { id:"lender", label:"Talk to a broker about four borrowers on one property", hint:"Banks usually put everyone on one loan and each person is liable for the lot. Some lenders do property share loans with a split per person. Check co-living is accepted and what LVR they'll give." },
+    { id:"council", label:"Confirm council rules for rooming accommodation on this block", hint:"Brisbane allows up to 5 residents as accepted development if the zone and the rooming accommodation code allow it. Over 5 needs a development application. Other councils differ." },
+    R.sell>0 && { id:"gst", label:"GST on the lot you sell", hint:"Selling a subdivided lot for profit can be treated as a business and attract GST. Ask about the margin scheme before you sign anything." },
+    { id:"valuer", label:"Get a valuation on the finished house before you start", hint:`The plan assumes ${money(num(p.finishedValue))}. If the bank values it lower you'll need more cash.` },
+    { id:"insurance", label:"Insurance that covers rooming accommodation", hint:"Standard landlord policies often exclude it." },
+    { id:"rta", label:"Set up rooming accommodation agreements, not normal leases", hint:"In QLD each room is rented on a rooming accommodation agreement (RTA Form R18)." },
+  ].filter(Boolean);
 
   return (<>
     <div className="wrap">
       <header>
-        <span className="eyebrow">Queensland · Build and lease</span>
-        <h1>Co-living Investment</h1>
+        <span className="eyebrow">Queensland · Build and lease · {p.location || "QLD"}</span>
+        <h1>{p.projectName || "Co-living Investment"}</h1>
       </header>
 
-      <div className="tabs" role="tablist">
-        {[["summary","Summary"],["property","Property"],["investors","Investors"],["years","10 Years"]].map(([k,t])=>
-          <button key={k} role="tab" aria-pressed={tab===k} aria-selected={tab===k} onClick={()=>setTab(k)}>{t}</button>)}
+      <div className="tabwrap">
+        <div className="tabs" role="tablist">
+          {[["summary","Summary"],["costs","Costs"],["people","People"],["timeline","Timeline"],["years","10 Years"],["notes","Notes"]].map(([k,t])=>
+            <button key={k} role="tab" aria-pressed={tab===k} aria-selected={tab===k} onClick={()=>setTab(k)}>{t}</button>)}
+        </div>
       </div>
 
       {tab==="summary" && <div className="cols">
         <div className="stack">
           <div className="hero">
-            <span className={"pill "+(good?"good":"bad")}>{good ? "Makes money" : "Loses money"}</span>
+            <div className="pills">
+              <span className={"pill "+(good?"good":"bad")}>{good ? "Makes money" : "Loses money"}</span>
+              {undecided.map(x=><span key={x.i} className="pill warn">{x.name}'s funding not decided</span>)}
+              {R.owers.length>0 && <span className="pill info">{B.name} fronts {money(R.fronted)} of the build</span>}
+            </div>
             <div className={"big "+cls(R.profit)}>{signed(R.profit)}</div>
-            <p>Profit after 10 years once it's sold, after tax and every cost.{R.irr!==null && ` About ${pct(R.irr)} a year on the cash put in.`}{multi && ` Split across ${R.inv.length} investors.`}</p>
+            <p>Profit for the group if sold in year {Y}, after tax and every cost.{R.irr!==null && ` About ${pct(R.irr)} a year on the cash put in.`}{multi && ` Split across ${R.inv.length} people.`}</p>
           </div>
           <div className="tiles">
-            <div className="tile"><span className="k">Cash in</span><span className="v">{money(R.cashIn)}</span></div>
-            <div className="tile"><span className="k">Loan</span><span className="v">{money(R.loan)}</span></div>
-            <div className="tile"><span className="k">Year 1 per week</span><span className={"v "+cls(y1.after)}>{money(y1.after/52)}</span></div>
-            <div className="tile"><span className="k">Rent yield</span><span className="v">{(R.grossYield*100).toFixed(1)}%</span></div>
-            <div className="tile"><span className="k">Equity year 10</span><span className="v">{money(R.rows[9].equity)}</span></div>
-            <div className="tile"><span className="k">Cash if sold</span><span className="v">{money(R.saleNet)}</span></div>
+            <div className="tile"><span className="k">Cash the group puts in</span><span className="v">{money(R.cashIn)}</span></div>
+            <div className="tile"><span className="k">Bank loans</span><span className="v">{money(R.loan)}</span></div>
+            <div className="tile"><span className="k">Owed to {B.name}</span><span className="v">{money(R.owed)}</span></div>
+            <div className="tile"><span className="k">Year 1 per week, group</span><span className={"v "+cls(y1.after)}>{money(y1.after/52)}</span></div>
+            <div className="tile"><span className="k">Rent yield on cost</span><span className="v">{(R.grossYield*100).toFixed(1)}%</span></div>
+            <div className="tile"><span className="k">Months until first rent</span><span className="v">{Math.round(R.tl.rentStart)}</span></div>
+            <div className="tile"><span className="k">Equity in year {Y}</span><span className="v">{money(R.rows[Y-1].equity)}</span></div>
+            <div className="tile"><span className="k">Saved by {B.name} building</span><span className="v pos">{money(R.saving)}</span></div>
           </div>
 
-          <Group title="Year 1 each week" footer="Tax back is the refund from claiming the loss and depreciation against wages. That's the negative gearing part.">
+          <Group title="Year 1 each week, whole property" footer="Tax back is the refund from claiming the loss and depreciation against wages. That's the negative gearing part. Payments between the group cancel out here, see People for each person.">
             <Val label="Rent in" value={money(y1.rent/52)} c="pos"/>
             <Val label="Property manager" value={money(-y1.pm/52)}/>
-            <Val label="Running costs" value={money(-y1.running/52)}/>
+            <Val label="Running costs and letting" value={money(-y1.running/52)}/>
             <Val label="Land tax" value={money(-y1.landTax/52)}/>
-            <Val label="Loan repayments" value={money(-(y1.interest+y1.principal)/52)}/>
+            <Val label="Bank loan repayments" value={money(-(y1.interest+y1.principal)/52)}/>
             <Val label="Before tax" value={money(y1.before/52)} c={cls(y1.before)}/>
             <Val label="Tax back" value={signed(y1.taxBack/52)} c={cls(y1.taxBack)}/>
-            <Val label="In your pocket" value={money(y1.after/52)} c={cls(y1.after)} strong/>
+            <Val label="In pocket" value={money(y1.after/52)} c={cls(y1.after)} strong/>
           </Group>
 
-          <Group title="Upfront money">
+          <Group title="Upfront money, whole group">
             <Val label="Land" value={money(num(p.land))}/>
             <Val label="Stamp duty" value={money(R.duty)}/>
             {isSub(p) && <Val label="Subdivision" value={money(R.subCosts)}/>}
-            <Val label="Build" value={money(num(p.build))}/>
-            <Val label="Furniture and other" value={money(num(p.furniture)+num(p.otherUpfront))}/>
+            <Val label="Build incl contingency and fee" value={money(R.buildCost)}/>
+            <Val label="Furniture, other, loan fees" value={money(num(p.furniture)+num(p.otherUpfront)+num(p.loanFees))}/>
             <Val label="Interest while building" value={money(R.holdInt)}/>
-            <Val label="Less the loan" value={money(-R.loanStart)}/>
+            <Val label="Tax back on that interest" value={money(-R.holdTaxBack)}/>
+            <Val label="Less bank loans" value={money(-R.loanStart)}/>
             {R.sell>0 && <>
               <Val label={`Sale of ${R.sell} ${R.sell>1?"lots":"lot"}`} value={money(R.saleGross)}/>
               <Val label="Profit on lots sold" value={money(R.lotProfit)} c={cls(R.lotProfit)}/>
@@ -500,18 +772,26 @@ function App(){
               {p.payDown==="yes" && <Val label="Paid off the loan" value={money(R.loanStart-R.loan)}/>}
               {R.cashBack>0 && <Val label="Cash back" value={money(-R.cashBack)}/>}
             </>}
-            <Val label="Total cash in" value={money(R.cashIn)} strong/>
+            <Val label="Total cash in" hint={R.owers.length>0?`Includes the ${money(R.fronted)} ${B.name} fronts for others`:null} value={money(R.cashIn)} strong/>
           </Group>
         </div>
 
         <div className="stack">
+          {multi && <Group title="Each person" right={<span>Cash in · Per week</span>} footer="Per week is year 1 after tax, after bank and builder repayments.">
+            {R.inv.map(iv=>(
+              <Val key={iv.i} label={<>{iv.name} <span className={"pill "+(iv.fund==="undecided"?"warn":iv.fund==="boots"?"info":"grey")} style={{marginLeft:6}}>{iv.isBuilder?"Builder":iv.fund==="boots"?`Owes ${B.name}`:FUND[iv.fund]}</span></>}
+                   hint={`${(iv.s*100).toFixed(0)}% share${iv.loan0>0?` · bank loan ${money(iv.loan)}`:""}${iv.debt0>0?` · owes ${money(iv.debt0)}`:""}`}
+                   value={<>{money(iv.cashIn)} · <span className={cls(iv.rows[0].after)}>{money(iv.rows[0].after/52)}</span></>}/>
+            ))}
+          </Group>}
+
           <section className="gwrap">
             <div className="ghead"><span>Equity each year</span></div>
             <div className="chartbox"><Chart rows={R.rows} cashIn={R.cashIn}/></div>
-            <div className="gfoot">What the owners hold outright in the kept house. The line is the cash put in.</div>
+            <div className="gfoot">What the group holds outright in the kept house. The line is the cash put in.</div>
           </section>
 
-          <Group title="Stress test" right={<span>Per week · 10 yr profit</span>} footer="What happens if things go worse than planned.">
+          <Group title="Stress test" right={<span>Per week · Profit yr {Y}</span>} footer="What happens if things go worse than planned.">
             <Val label="As entered" value={<>{money(y1.after/52)} · {money(R.profit)}</>} strong/>
             {stress.map(([t,s])=>(
               <Val key={t} label={t} value={<><span className={cls(s.rows[0].after)}>{money(s.rows[0].after/52)}</span> · <span className={cls(s.profit)}>{money(s.profit)}</span></>}/>
@@ -523,82 +803,97 @@ function App(){
             <Val label="Covers costs after tax back" value={beAfter===null?"n/a":money(beAfter)}/>
             <Val label="You've entered" value={money(isRooms(p)?num(p.roomRent):num(p.weeklyRent))} strong/>
           </Group>
-
-          {multi && <Group title="Each investor" right={<span>Cash in · Per week</span>}>
-            {R.inv.map(iv=>(
-              <Val key={iv.i} label={iv.name} hint={`${(iv.s*100).toFixed(1)}% share`} value={<>{money(iv.cashIn)} · <span className={cls(iv.rows[0].after)}>{money(iv.rows[0].after/52)}</span></>}/>
-            ))}
-          </Group>}
         </div>
       </div>}
 
-      {tab==="property" && <div className="cols">
+      {tab==="costs" && <div className="cols">
         {[0,1].map(col=>(
           <div className="stack" key={col}>
+            {col===0 && <Group title="Project">
+              <NumRow id="projectName" text label="Name" value={p.projectName} onChange={v=>set("projectName",v)}/>
+              <NumRow id="location" text label="Suburb or area" value={p.location} onChange={v=>set("location",v)}/>
+            </Group>}
             {SECTIONS.filter((s,i)=> (i<3)===(col===0)).filter(s=>!s.show||s.show(p)).map(s=>(
               <Group key={s.title} title={s.title}
                 footer={s.title==="Land" ? `Stamp duty ${money(R.duty)}` :
-                        s.title==="Subdivision" ? `Total subdivision ${money(R.subCosts)} · Interest while waiting ${money(R.subInt)}` :
-                        s.title==="Build" ? `Interest while building ${money(R.buildInt)}` :
-                        s.title==="Loan" ? `Loan ${money(R.loanStart)}${R.sell>0&&p.payDown==="yes"?` · ${money(R.loan)} after lot sale`:""}` :
-                        s.title==="Rent" ? `Full rent ${money(R.weeklyRent)} a week` : null}>
+                        s.title==="Subdivision" ? `Total subdivision ${money(R.subCosts)} · each lot costs ${money(R.perLot)} all up` :
+                        s.title==="Build" ? `Build with contingency ${money(R.buildCost)} · saves ${money(R.saving)} against an outside builder` :
+                        s.title==="Loan" ? `Bank loans ${money(R.loanStart)}${R.sell>0&&p.payDown==="yes"?` · ${money(R.loan)} after lot sale`:""} · interest while building ${money(R.holdInt)}` :
+                        s.title==="Rent" ? `Full rent ${money(R.weeklyRent)} a week · ${money(R.weeklyRent*52)} a year before empty weeks` : null}>
                 {s.fields.filter(f=>!f[4]||f[4](p)).map(([k,l,u,h,,o])=> u==="seg"
                   ? <SegRow key={k} label={l} hint={h} options={o} value={p[k]} onChange={v=>set(k,v)}/>
                   : <NumRow key={k} id={k} label={l} hint={h} unit={u} value={p[k]} onChange={v=>set(k,v)}/>)}
               </Group>
             ))}
-            {col===1 && <Group><button className="btn" onClick={()=>setP(DEFAULTS)}>Reset to example figures</button></Group>}
+            {col===1 && <Group><button className="btn" onClick={()=>setP({...DEFAULTS, checks:p.checks})}>Reset to researched figures</button></Group>}
           </div>
         ))}
       </div>}
 
-      {tab==="investors" && <div className="stack">
-        <Group title="Ownership" warn={p.splitMode==="custom" && Math.abs(R.shareTotal-100)>0.01}
-          footer={p.splitMode==="custom" && Math.abs(R.shareTotal-100)>0.01
-            ? `Shares add up to ${R.shareTotal.toFixed(1)}%. They're scaled to 100% in the numbers.`
-            : "Each investor takes their own loan for their share. Leave a rate or tax rate blank to use the property default."}>
-          <div className="row">
-            <span className="lbl">Investors</span>
-            <span className="stepper">
-              <button type="button" aria-label="Fewer investors" onClick={()=>setCount(R.inv.length-1)}>−</button>
-              <span>{R.inv.length}</span>
-              <button type="button" aria-label="More investors" onClick={()=>setCount(R.inv.length+1)}>+</button>
-            </span>
-          </div>
-          <SegRow label="Split" options={[["equal","Equal"],["custom","Custom"]]} value={p.splitMode} onChange={v=>set("splitMode",v)}/>
-        </Group>
+      {tab==="people" && <div className="stack">
+        <div className="cols">
+          <Group title="Ownership" warn={p.splitMode==="custom" && Math.abs(R.shareTotal-100)>0.01}
+            footer={p.splitMode==="custom" && Math.abs(R.shareTotal-100)>0.01
+              ? `Shares add up to ${R.shareTotal.toFixed(1)}%. They're scaled to 100% in the numbers.`
+              : "Each person's bank loan covers their share of the land, subdivision and build. Leave a rate or tax rate blank to use the Costs tab default."}>
+            <div className="row">
+              <span className="lbl">People</span>
+              <span className="stepper">
+                <button type="button" aria-label="Fewer people" onClick={()=>setCount(R.inv.length-1)}>−</button>
+                <span>{R.inv.length}</span>
+                <button type="button" aria-label="More people" onClick={()=>setCount(R.inv.length+1)}>+</button>
+              </span>
+            </div>
+            <SegRow label="Split" options={[["equal","Equal"],["custom","Custom"]]} value={p.splitMode} onChange={v=>set("splitMode",v)}/>
+            <SelectRow id="builder" label="Who is the builder" options={R.inv.map(iv=>[String(iv.i), iv.name])} value={String(B.i)} onChange={v=>set("builder",v)}/>
+          </Group>
+          <Group title={`Paying ${B.name} back`} footer={`${B.name} pays for the build share of anyone set to "Owes ${B.name}", then they pay him back weekly. ${R.owers.length>0?`Right now that's ${R.owers.map(x=>x.name).join(" and ")}, ${money(R.fronted)} in total.`:"Nobody owes him right now."}`}>
+            <NumRow id="bootsYears" label="Pay back over" unit="yrs" value={p.bootsYears} onChange={v=>set("bootsYears",v)}/>
+            <NumRow id="bootsRate" label={`Interest ${B.name} charges`} unit="%" hint="0 is a straight loan with no interest" value={p.bootsRate} onChange={v=>set("bootsRate",v)}/>
+            {R.owers.map(x=><Val key={x.i} label={`${x.name} pays ${B.name}`} hint={`${money(x.debt0)} over ${R.tl.bootsYears} years`} value={money(x.weeklyBoots)+" a week"}/>)}
+            {R.owers.length>0 && <Val label={`${B.name} gets back`} value={money(B.weeklyRecv)+" a week"} strong/>}
+          </Group>
+        </div>
 
         <div className="invgrid">
           {R.inv.map(iv=>{
             const src = (p.investors||[])[iv.i] || {};
             const r1 = iv.rows[0];
+            const fundOpts = [["loan","Bank loan"], ...(iv.isBuilder?[]:[["boots",`Owes ${B.name}`]]), ["cash","Own cash"], ["undecided","Not decided"]];
             return (
               <div className="stack" key={iv.i}>
-                <Group title={iv.name} right={<span>{(iv.s*100).toFixed(1)}%</span>}>
+                <Group title={<>{iv.name}{iv.isBuilder && <span className="pill info" style={{marginLeft:8}}>Builder</span>}</>} right={<span>{(iv.s*100).toFixed(1)}%</span>}
+                  footer={iv.fund==="undecided" ? `${iv.name} hasn't settled how they're paying. The maths uses a bank loan until you pick.` : iv.fund==="cash" ? "No bank loan. They put their whole share in as cash." : null} warn={iv.fund==="undecided"}>
                   <NumRow id={`n${iv.i}`} text label="Name" value={src.name ?? iv.name} onChange={v=>setInv(iv.i,"name",v)}/>
                   {p.splitMode==="custom"
                     ? <NumRow id={`s${iv.i}`} label="Share" unit="%" value={src.share ?? ""} onChange={v=>setInv(iv.i,"share",v)}/>
                     : <Val label="Share" value={(iv.s*100).toFixed(1)+"%"}/>}
-                  <NumRow id={`r${iv.i}`} label="Interest rate" unit="%" value={src.rate ?? ""} placeholder={String(p.rate)} onChange={v=>setInv(iv.i,"rate",v)}/>
-                  <NumRow id={`t${iv.i}`} label="Tax rate" unit="%" value={src.tax ?? ""} placeholder={String(p.taxRate)} onChange={v=>setInv(iv.i,"tax",v)}/>
+                  <SegRow label="How they pay for their share" options={fundOpts} value={iv.fund} onChange={v=>setInv(iv.i,"fund",v)}/>
+                  <NumRow id={`r${iv.i}`} label="Bank interest rate" unit="%" value={src.rate ?? ""} placeholder={String(p.rate)} onChange={v=>setInv(iv.i,"rate",v)}/>
+                  <NumRow id={`t${iv.i}`} label="Tax rate" unit="%" hint="Their marginal rate incl Medicare" value={src.tax ?? ""} placeholder={String(p.taxRate)} onChange={v=>setInv(iv.i,"tax",v)}/>
                 </Group>
-                <Group title="Their loan">
-                  <Val label="Loan needed" value={money(iv.loan0)} strong/>
-                  {R.sell>0 && p.payDown==="yes" && <Val label="After lot sale" value={money(iv.loan)}/>}
-                  <Val label="Rate" value={iv.rPct.toFixed(2)+"%"}/>
-                  <Val label="Repayment a week" value={money(iv.weeklyRepay)}/>
-                  <Val label="Repayment a month" value={money(iv.weeklyRepay*52/12)}/>
-                  <Val label="Interest year 1" value={money(r1.interest)}/>
+                <Group title="Their money up front">
+                  <Val label="Share of all costs" value={money(iv.s*R.totalCost)}/>
+                  <Val label="Bank loan" value={money(iv.loan0)}/>
+                  {iv.loan0!==iv.loan && <Val label="Bank loan after lot sale" value={money(iv.loan)}/>}
+                  {iv.debt0>0 && <Val label={`Owes ${B.name} for the build`} value={money(iv.debt0)}/>}
+                  {iv.isBuilder && iv.fronted>0 && <Val label="Fronts for others" value={money(iv.fronted)} c="warnc"/>}
+                  <Val label="Cash to put in" hint="Own share, interest while building, less loans and lot sale money" value={money(iv.cashIn)} strong/>
                 </Group>
-                <Group title="Their numbers">
-                  <Val label="Cash to put in" value={money(iv.cashIn)} strong/>
-                  <Val label="Rent share a week" value={money(r1.rent/52)}/>
-                  <Val label="Costs share a week" value={money(-r1.costs/52)}/>
-                  <Val label="Tax back a week" value={signed(r1.taxBack/52)} c={cls(r1.taxBack)}/>
-                  <Val label="In pocket a week" value={money(r1.after/52)} c={cls(r1.after)} strong/>
-                  <Val label="Equity year 10" value={money(iv.rows[9].equity)}/>
-                  <Val label="Profit after 10 years" value={signed(iv.profit)} c={cls(iv.profit)} strong/>
-                  <Val label="Return a year" value={pct(iv.irr)}/>
+                <Group title="Their money each week, year 1">
+                  <Val label="Rent share" value={money(r1.rent/52)} c="pos"/>
+                  <Val label="Costs share" value={money(-r1.costs/52)}/>
+                  {iv.loan>0 && <Val label={`Bank repayment at ${iv.rPct.toFixed(2)}%`} hint={`${money(iv.weeklyRepay*52/12)} a month`} value={money(-iv.weeklyRepay)}/>}
+                  {iv.debt0>0 && <Val label={`Repayment to ${B.name}`} value={money(-iv.weeklyBoots)}/>}
+                  {iv.isBuilder && iv.fronted>0 && <Val label="Repayments from others" value={signed(iv.weeklyRecv)} c="pos"/>}
+                  <Val label="Tax back" value={signed(r1.taxBack/52)} c={cls(r1.taxBack)}/>
+                  <Val label="In pocket" value={money(r1.after/52)} c={cls(r1.after)} strong/>
+                </Group>
+                <Group title={`Where they land in year ${Y}`}>
+                  <Val label="Equity" hint={iv.isBuilder&&iv.fronted>0?"Includes what others still owe him":iv.debt0>0?`After what's still owed to ${B.name}`:null} value={money(iv.rows[Y-1].equity)}/>
+                  <Val label="Cash if sold" value={money(iv.saleNet)}/>
+                  <Val label="Profit" value={signed(iv.profit)} c={cls(iv.profit)} strong/>
+                  <Val label="Return a year on their cash" value={pct(iv.irr)}/>
                 </Group>
               </div>
             );
@@ -606,35 +901,124 @@ function App(){
         </div>
       </div>}
 
+      {tab==="timeline" && <div className="stack">
+        <div className="cols">
+          <Group title="Dates" footer="Change these and the chart moves.">
+            <NumRow id="startMonth" month label="Start month" hint="When you sign for the block. Type it as 2026-11 if no picker shows" value={p.startMonth} onChange={v=>set("startMonth",v)}/>
+            <NumRow id="settleMonths" label="Contract to settlement" unit="mths" value={p.settleMonths} onChange={v=>set("settleMonths",v)}/>
+            {isSub(p) && <NumRow id="subMonths" label="Subdivision to new titles" unit="mths" hint="Survey, council approval, civil works, plan sealing" value={p.subMonths} onChange={v=>set("subMonths",v)}/>}
+            {isSub(p) && R.sell>0 && <NumRow id="lotSettleMonths" label="Lot sale settles after titles" unit="mths" value={p.lotSettleMonths} onChange={v=>set("lotSettleMonths",v)}/>}
+            {isSub(p) && <SegRow label="Build starts" hint="Building before titles needs council to allow it" options={[["titles","After titles"],["settlement","After settlement"]]} value={p.buildStart} onChange={v=>set("buildStart",v)}/>}
+            <NumRow id="buildMonths" label="Build time" unit="mths" value={p.buildMonths} onChange={v=>set("buildMonths",v)}/>
+            <NumRow id="leaseUpMonths" label="Furnish and find tenants" unit="mths" value={p.leaseUpMonths} onChange={v=>set("leaseUpMonths",v)}/>
+          </Group>
+          <Group title="Key dates">
+            <Val label="Sign for the block" value={monthLabel(p.startMonth,0)}/>
+            <Val label="Settlement" value={monthLabel(p.startMonth,R.tl.settleAt)}/>
+            {R.tl.sub && <Val label="New titles" value={monthLabel(p.startMonth,R.tl.titlesAt)}/>}
+            {R.sell>0 && <Val label="Lot sale money lands" value={monthLabel(p.startMonth,R.tl.lotSaleAt)}/>}
+            <Val label="Build starts" value={monthLabel(p.startMonth,R.tl.buildStartAt)}/>
+            <Val label="Build finished" value={monthLabel(p.startMonth,R.tl.buildEnd)}/>
+            <Val label="First rent" value={monthLabel(p.startMonth,R.tl.rentStart)} strong/>
+            {R.tl.hasOwers && <Val label={`${B.name} paid back by`} value={monthLabel(p.startMonth,R.tl.rentStart+R.tl.bootsYears*12)}/>}
+            {p.loanType==="io" && <Val label="Interest only usually ends" hint="Repayments jump when it rolls to P and I" value={monthLabel(p.startMonth,R.tl.rentStart+60)}/>}
+            <Val label={`Sell or review, year ${Y}`} value={monthLabel(p.startMonth,R.tl.rentStart+Y*12)}/>
+          </Group>
+        </div>
+
+        <section className="gwrap">
+          <div className="ghead"><span>Getting it built</span><span>{Math.round(R.tl.rentStart)} months to first rent</span></div>
+          <div className="chartbox"><Gantt tl={R.tl} startMonth={p.startMonth}/></div>
+        </section>
+
+        <section className="gwrap">
+          <div className="ghead"><span>Then owning it</span></div>
+          <div className="chartbox"><YearStrip tl={R.tl} Y={Y} loanType={p.loanType} builderName={B.name}/></div>
+        </section>
+
+        <section className="gwrap">
+          <div className="ghead"><span>Who pays what, and when</span></div>
+          <div className="tablebox">
+            <table>
+              <thead><tr><th>Stage</th><th>When</th>{R.inv.map(iv=><th key={iv.i}>{iv.name}</th>)}<th>Total</th></tr></thead>
+              <tbody>
+                {[
+                  ["settle","Settlement","Deposit on land, stamp duty, loan fees",R.tl.settleAt],
+                  R.tl.sub && ["sub","Subdivision","Costs the bank doesn't cover, plus interest",R.tl.settleAt],
+                  ["build","Build",`Progress payments the bank doesn't cover, plus interest${R.fronted>0?`. ${B.name} fronts ${money(R.fronted)}`:""}`,R.tl.buildStartAt],
+                  ["fitout","Fit out","Furniture and other costs",R.tl.buildEnd],
+                  R.sell>0 && ["lotBack","Lot sale",p.payDown==="yes"?"Money back after paying down the loan":"Money back to each person",R.tl.lotSaleAt],
+                  ["taxBack","Tax return","Refund on interest paid while building",R.tl.rentStart],
+                ].filter(Boolean).map(([k,label,hint,at])=>(
+                  <tr key={k}>
+                    <td><div>{label}</div><div className="hint">{hint}</div></td>
+                    <td>{monthLabel(p.startMonth,at)}</td>
+                    {R.inv.map(iv=><td key={iv.i} className={iv.stages[k]<0?"pos":""}>{money(iv.stages[k])}</td>)}
+                    <td className={R.stageTotals[k]<0?"pos":""}>{money(R.stageTotals[k])}</td>
+                  </tr>
+                ))}
+                <tr className="total"><td>Total cash in</td><td></td>{R.inv.map(iv=><td key={iv.i}>{money(iv.cashIn)}</td>)}<td>{money(R.cashIn)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="gfoot">Negative numbers are money coming back. The bank pays its share of each stage directly.</div>
+        </section>
+
+        <section className="gwrap">
+          <div className="ghead"><span>Cash the group needs, running total</span></div>
+          <div className="chartbox"><CashLine series={series} startMonth={p.startMonth}/></div>
+          <div className="gfoot">Peaks at {money(Math.max(...series))} just before first rent, then rent starts covering the loans.</div>
+        </section>
+      </div>}
+
       {tab==="years" && <div className="stack">
         {multi && <Group>
-          <div className="row">
-            <span className="lbl">Show</span>
-            <span className="selectwrap">
-              <select value={view} onChange={e=>setView(e.target.value)} aria-label="Show figures for">
-                <option value="all">Whole property</option>
-                {R.inv.map(iv=><option key={iv.i} value={String(iv.i)}>{iv.name}</option>)}
-              </select>
-            </span>
-          </div>
+          <SelectRow id="view" label="Show" options={[["all","Whole property"], ...R.inv.map(iv=>[String(iv.i), iv.name])]} value={view} onChange={setView}/>
         </Group>}
-        <YearTable rows={viewRows} pi={p.loanType==="pi"}/>
-        <Group title="If sold at year 10">
-          {(() => { const src = view==="all" ? R : (R.inv[+view]||R.inv[0]); return <>
+        <YearTable rows={viewRows} pi={p.loanType==="pi"} showBoots={!!(viewInv && viewInv.debt0>0)} showRecv={!!(viewInv && viewInv.isBuilder && viewInv.fronted>0)}/>
+        <Group title={`If sold in year ${Y}`}>
+          {(() => { const src = viewInv || R; return <>
             <Val label="Capital gains tax" value={money(-src.cgt)}/>
-            <Val label="Cash after loan and tax" value={money(src.saleNet)} strong/>
+            <Val label="Cash after loans and tax" value={money(src.saleNet)} strong/>
             <Val label="Total profit" value={signed(src.profit)} c={cls(src.profit)} strong/>
+            <Val label="Return a year" value={pct(src.irr)}/>
           </>; })()}
         </Group>
-        <div className="gfoot">Uses QLD transfer duty on the land and QLD individual land tax on the kept lot. Profit on lots sold is taxed as income, and GST can apply if the split is run as a business. Building depreciation is 2.5% of the build a year. CGT uses the 50% discount. Estimates only, so confirm with your accountant and lender.</div>
+        <div className="gfoot">Year 1 starts when the first tenants move in. Uses QLD transfer duty on the land and QLD land tax on the kept lot, assessed on the group together. Profit on lots sold is taxed as income. Interest paid while building is claimed in that year. Building depreciates at 2.5% a year, fittings and furniture at 20% diminishing. CGT uses the 50% discount. Estimates only, so confirm with your accountant and lender.</div>
+      </div>}
+
+      {tab==="notes" && <div className="cols">
+        <div className="stack">
+          <Group title="Decisions and checks" right={<span>{decisions.filter(d=>p.checks[d.id]).length} of {decisions.length} done</span>} footer="Tick these off as the group settles them. Ticks save on this device.">
+            {decisions.map(d=><Check key={d.id} id={d.id} label={d.label} hint={d.hint} checked={p.checks[d.id]} onChange={v=>setCheck(d.id,v)}/>)}
+          </Group>
+          <Group title="How it's worked out">
+            <Val label="Stamp duty" value="QLD general rate on the land"/>
+            <Val label="Land tax" value="QLD individual rates, one threshold for the block"/>
+            <Val label="Lot sale profit" value="Taxed as income at each person's rate"/>
+            <Val label="Interest while building" value="Claimed as a deduction that year"/>
+            <Val label="Depreciation" value="2.5% building, 20% diminishing on fittings"/>
+            <Val label="Loan fees" value="Claimed over 5 years"/>
+            <Val label="Sale" value="50% CGT discount, loans and builder debt cleared"/>
+            <Val label="Return a year" value="Internal rate of return on each person's cash"/>
+          </Group>
+        </div>
+        <div className="stack">
+          <Group title="Where the starting numbers came from" footer="Checked October 2026. Land price, build cost and finished value are the ones you most need to replace with your own.">
+            {SOURCES.map(([what, who, url])=>(
+              <div className="src" key={url}><b>{what}</b><span>{who}</span><a href={url} target="_blank" rel="noopener">{url.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]}</a></div>
+            ))}
+          </Group>
+        </div>
       </div>}
     </div>
 
     <div className="bar">
       <div className="in">
-        <div className="m"><span>Profit after 10 years</span><b className={cls(R.profit)}>{signed(R.profit)}</b></div>
+        <div className="m"><span>Profit, year {Y}</span><b className={cls(R.profit)}>{signed(R.profit)}</b></div>
         <div className="m"><span>Year 1 per week</span><b className={cls(y1.after)}>{money(y1.after/52)}</b></div>
         <div className="m"><span>Cash in</span><b>{money(R.cashIn)}</b></div>
+        <div className="m"><span>First rent</span><b>{monthLabel(p.startMonth,R.tl.rentStart)}</b></div>
       </div>
     </div>
   </>);
