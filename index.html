@@ -58,6 +58,7 @@ h1{font-size:clamp(30px,6vw,40px);font-weight:700;letter-spacing:-.02em;margin:0
 .inp .u{color:var(--sec);font-size:15px}
 .inp input{width:118px;text-align:right;border:0;background:transparent;font:400 16px var(--font);color:var(--blue);outline:none;padding:2px 0;font-variant-numeric:tabular-nums}
 .inp input.name{width:170px}
+#syncUrl{width:220px;text-align:left;font-size:13px}
 .inp input.month{width:150px;color:var(--blue)}
 .inp input::placeholder{color:var(--sec)}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -422,6 +423,16 @@ const INITIAL = HASH_PLAN || LOCAL_PLAN || DEFAULTS;
 const HAD_LOCAL = !!(HASH_PLAN || LOCAL_PLAN);
 if (HASH_PLAN) { try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} }
 const IN_VIEWER = typeof window!=="undefined" && !!(window.claude && typeof window.claude.use==="function");
+let LOCAL_SYNC = ""; try { LOCAL_SYNC = localStorage.getItem(KEY+"-sync") || ""; } catch(e){}
+const looksLikeSyncUrl = u => /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(String(u||"").trim());
+// the Google script that holds the shared plan for the GitHub copy
+function gasAdapter(url){
+  const u = String(url).trim();
+  return {
+    async read(){ const r = await fetch(u + (u.includes("?")?"&":"?") + "t=" + Date.now(), { cache:"no-store", redirect:"follow" }); if (!r.ok) throw new Error("read"); return r.json(); },
+    async write(plan){ const r = await fetch(u, { method:"POST", redirect:"follow", body: JSON.stringify({ plan }) }); if (!r.ok) throw new Error("write"); return r.json(); },
+  };
+}
 
 function Group({title, right, footer, warn, children}){
   return (
@@ -717,23 +728,54 @@ function App(){
   const [pending,setPending] = useState(null);
   const [copyBox,setCopyBox] = useState(null);
   const [syncState,setSyncState] = useState("off");
+  const [syncUrlRepo,setSyncUrlRepo] = useState("");
+  const [syncUrlLocal,setSyncUrlLocal] = useState(LOCAL_SYNC);
+  const syncUrl = looksLikeSyncUrl(syncUrlRepo) ? syncUrlRepo.trim() : looksLikeSyncUrl(syncUrlLocal) ? syncUrlLocal.trim() : "";
   const pRef = React.useRef(p); useEffect(()=>{ pRef.current = p; },[p]);
-  const sync = React.useRef({ db:null, canWrite:false, dirty:false, ready:false, lastWritten:0, t:null, q:Promise.resolve() });
+  const sync = React.useRef({ remote:null, canWrite:false, dirty:false, ready:false, failed:false, lastWritten:0, remoteStamp:0, t:null, q:Promise.resolve() });
   useEffect(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(p)); }catch(e){} },[p]);
+  useEffect(()=>{ try{ localStorage.setItem(KEY+"-sync", syncUrlLocal); }catch(e){} },[syncUrlLocal]);
   useEffect(()=>{ if (!toastMsg) return; const t=setTimeout(()=>setToastMsg(null), 3200); return ()=>clearTimeout(t); },[toastMsg]);
   const toast = m => setToastMsg(m);
 
   const markSeen = key => { try{ localStorage.setItem(KEY+"-seen", key); }catch(e){} };
-  const scheduleWrite = plan => {
-    const s = sync.current; if (!s.db || !s.canWrite) return;
+  // our changes since the last shared plan we saw, laid over the newest shared plan, so two people editing at once don't wipe each other
+  const mergeOnto = (latest, base, mine) => {
+    if (!latest || !base) return mine;
+    const out = {...latest};
+    Object.keys(DEFAULTS).forEach(k=>{ if (k!=="checks" && JSON.stringify(mine[k])!==JSON.stringify(base[k])) out[k]=mine[k]; });
+    const checks = {...(latest.checks||{})}, mc = mine.checks||{}, bc = base.checks||{};
+    Object.keys({...mc, ...bc}).forEach(id=>{ if (mc[id]!==bc[id]) checks[id]=mc[id]; });
+    out.checks = checks;
+    return mergePlan(out);
+  };
+  const scheduleWrite = () => {
+    const s = sync.current; if (!s.remote || !s.canWrite) return;
     clearTimeout(s.t);
     s.t = setTimeout(()=>{ s.q = s.q.then(async()=>{
-      const stamp = Date.now(); s.lastWritten = stamp;
-      try { await s.db.doc("plan/current").set({ plan: mergePlan(plan), updatedAt: stamp }); s.dirty = false; }
-      catch(e){ if (e && e.code==="invalid_argument"){ s.canWrite=false; setSyncState("readonly"); } }
-    }); }, 900);
+      const mine = mergePlan(pRef.current);
+      try {
+        let latest = null; try { latest = s.remote.latest ? await s.remote.latest() : null; } catch(e){ latest = null; }
+        const merged = mergeOnto(latest, s.base, mine);
+        const stamp = await s.remote.write(merged);
+        s.lastWritten = stamp; s.remoteStamp = stamp; s.base = merged; s.failed = false; setSyncState("on");
+        const typedMeanwhile = planKey(pRef.current) !== planKey(mine);
+        if (planKey(merged) !== planKey(mine) && !typedMeanwhile){ setP(merged); s.dirty = false; }
+        else s.dirty = typedMeanwhile;
+      }
+      catch(e){ if (e && e.code==="invalid_argument"){ s.canWrite=false; setSyncState("readonly"); } else { s.failed = true; setSyncState("error"); } }
+    }); }, 1000);
   };
-  const change = fn => setP(o => { const n = fn(o); sync.current.dirty = true; scheduleWrite(n); return n; });
+  // a plan arrived from the shared store: take it, or ask if this device has its own changes
+  const takeRemote = (plan) => {
+    const s = sync.current;
+    if (planKey(plan) !== planKey(pRef.current)){
+      if (!s.dirty && (s.ready || !HAD_LOCAL)){ s.base = plan; applyPlan(plan); }
+      else setPending({ source:"shared", plan });
+    } else s.base = plan;
+    s.ready = true;
+  };
+  const change = fn => { setP(fn); sync.current.dirty = true; scheduleWrite(); };
   const applyPlan = (plan, key) => { setP(plan); sync.current.dirty=false; setPending(null); if (key) markSeen(key); toast("Shared plan loaded"); };
   const set = (k,v)=>change(o=>({...o,[k]:v}));
   const setCheck = (k,v)=>change(o=>({...o, checks:{...(o.checks||{}), [k]:v}}));
@@ -753,31 +795,34 @@ function App(){
         const db = await window.claude.use("db"); if (!db || cancelled) return;
         const user = await window.claude.use("user");
         let cw = null; try { cw = user ? await user.can("data.write") : null; } catch(e){}
-        sync.current.db = db; sync.current.canWrite = cw !== false;
+        const s = sync.current;
+        s.remote = {
+          kind:"db",
+          latest: async () => { const snap = await db.doc("plan/current").get(); return snap.exists ? ((snap.data()||{}).plan || null) : null; },
+          write: async plan => { const stamp = Date.now(); s.lastWritten = stamp; await db.doc("plan/current").set({ plan, updatedAt: stamp }); return stamp; }
+        };
+        s.canWrite = cw !== false;
         setSyncState(cw===false ? "readonly" : "on");
         unsub = db.doc("plan/current").onSnapshot(snap=>{
-          const s = sync.current;
-          if (!snap.exists){ if (!s.ready && HAD_LOCAL && s.canWrite) scheduleWrite(pRef.current); s.ready = true; return; }
+          if (!snap.exists){ if (!s.ready && HAD_LOCAL && s.canWrite) scheduleWrite(); s.ready = true; return; }
           const d = snap.data() || {}; const stamp = Number(d.updatedAt)||0;
           if (stamp && stamp===s.lastWritten) { s.ready = true; return; }
           if (snap.metadata && snap.metadata.hasPendingWrites) return;
-          const plan = mergePlan(d.plan||{});
-          const differs = planKey(plan) !== planKey(pRef.current);
-          if (differs){
-            if (!s.dirty && (s.ready || !HAD_LOCAL)) applyPlan(plan);
-            else setPending({ source:"shared", plan });
-          }
-          s.ready = true;
+          takeRemote(mergePlan(d.plan||{}));
         }, ()=>setSyncState("off"));
       } catch(e){ setSyncState("off"); }
     })();
     return ()=>{ cancelled=true; if (unsub) unsub(); };
   },[]);
 
-  // agreed plan kept in plan.json next to this page, for the GitHub copy
+  // GitHub copy: sync.json names the Google script that holds the shared plan. No script, then plan.json is the agreed copy.
   useEffect(()=>{
-    if (IN_VIEWER || HASH_PLAN) return;
+    if (IN_VIEWER) return;
     (async()=>{
+      let url = "";
+      try { const r = await fetch("sync.json", {cache:"no-store"}); if (r.ok){ const j = await r.json(); if (looksLikeSyncUrl(j.url)) url = j.url.trim(); } } catch(e){}
+      if (url){ setSyncUrlRepo(url); return; }
+      if (HASH_PLAN || looksLikeSyncUrl(LOCAL_SYNC)) return;
       try {
         const res = await fetch("plan.json", {cache:"no-store"}); if (!res.ok) return;
         const j = await res.json(); const plan = mergePlan(j.plan || j); const key = planKey(plan);
@@ -790,10 +835,41 @@ function App(){
     })();
   },[]);
 
+  // GitHub copy with a Google script: poll it, write to it
+  useEffect(()=>{
+    if (IN_VIEWER || !syncUrl) return;
+    const s = sync.current; const ad = gasAdapter(syncUrl);
+    s.remote = {
+      kind:"gas",
+      latest: async () => { const d = await ad.read(); return d && d.plan ? mergePlan(d.plan) : null; },
+      write: async plan => { const r = await ad.write(plan); if (!r || !r.ok) throw new Error("write"); return Number(r.updatedAt) || Date.now(); }
+    };
+    s.canWrite = true; s.ready = false; s.failed = false; s.remoteStamp = 0; s.base = null;
+    let stop = false, timer = null;
+    setSyncState("connecting");
+    const tick = async () => {
+      if (stop) return;
+      try {
+        const d = await ad.read(); if (stop) return;
+        const stamp = Number(d && d.updatedAt) || 0;
+        if (!d || !d.plan){ if (!s.ready && HAD_LOCAL) scheduleWrite(); s.ready = true; }
+        else if (stamp !== s.lastWritten && stamp !== s.remoteStamp){ s.remoteStamp = stamp; takeRemote(mergePlan(d.plan)); }
+        else s.ready = true;
+        if (s.failed && s.dirty) scheduleWrite(); else if (!s.failed) setSyncState("on");
+      } catch(e){ setSyncState("error"); }
+      timer = setTimeout(tick, (typeof document!=="undefined" && document.hidden) ? 30000 : 7000);
+    };
+    const onVis = () => { if (!document.hidden){ clearTimeout(timer); tick(); } };
+    document.addEventListener("visibilitychange", onVis);
+    tick();
+    return ()=>{ stop = true; clearTimeout(timer); document.removeEventListener("visibilitychange", onVis); s.remote = null; setSyncState("off"); };
+  },[syncUrl]);
+
   const copy = async (text, msg) => { try { await navigator.clipboard.writeText(text); toast(msg); setCopyBox(null); } catch(e){ setCopyBox(text); toast("Copy it from the box below"); } };
   const shareLink = () => copy(location.origin + location.pathname + location.search + "#plan-" + b64u(JSON.stringify(diffPlan(p))), "Link copied. Send it to the group");
   const copyPlanFile = () => copy(JSON.stringify({ plan: mergePlan(p), updatedAt: Date.now() }, null, 2), "Plan copied. Paste it into plan.json on GitHub");
-  const keepMine = () => { const pd = pending; setPending(null); if (!pd) return; if (pd.source==="github") markSeen(pd.key); if (pd.source==="shared") { sync.current.dirty = true; scheduleWrite(pRef.current); } };
+  const loadPending = () => { const pd = pending; if (!pd) return; if (pd.source==="shared") sync.current.base = pd.plan; applyPlan(pd.plan, pd.key); };
+  const keepMine = () => { const pd = pending; setPending(null); if (!pd) return; if (pd.source==="github") markSeen(pd.key); if (pd.source==="shared") { sync.current.dirty = true; scheduleWrite(); } };
 
   const R = useMemo(()=>run(p),[p]);
   const y1 = R.rows[0];
@@ -839,9 +915,12 @@ function App(){
           <h1>{p.projectName || "Co-living Investment"}</h1>
         </div>
         <div className="hside">
-          {IN_VIEWER
-            ? (syncState==="on" ? <span className="pill good">Live sync on</span> : syncState==="readonly" ? <span className="pill info">Live view, read only</span> : <span className="pill grey">Saved on this device</span>)
-            : <button type="button" className="hbtn" onClick={shareLink}>Share link</button>}
+          {syncState==="on" ? <span className="pill good">Live sync on</span>
+            : syncState==="readonly" ? <span className="pill info">Live view, read only</span>
+            : syncState==="error" ? <span className="pill warn">Sync problem, retrying</span>
+            : syncState==="connecting" ? <span className="pill grey">Connecting</span>
+            : IN_VIEWER ? <span className="pill grey">Saved on this device</span> : null}
+          {!IN_VIEWER && <button type="button" className="hbtn" onClick={shareLink}>Share link</button>}
         </div>
       </header>
 
@@ -851,7 +930,7 @@ function App(){
           <span className="hint">Load it and your numbers on this device get replaced. Keep yours{pending.source==="shared" && syncState==="on" ? " and it becomes the shared plan" : ""}.</span>
         </div>
         <div className="bbtns">
-          <button type="button" className="hbtn" onClick={()=>applyPlan(pending.plan, pending.key)}>Load it</button>
+          <button type="button" className="hbtn" onClick={loadPending}>Load it</button>
           <button type="button" className="hbtn plain" onClick={keepMine}>Keep mine</button>
         </div>
       </div>}
@@ -1156,14 +1235,19 @@ function App(){
         <div className="stack">
           <Group title="Sharing" footer={IN_VIEWER
               ? (syncState==="on" ? "Changes you make here save to the shared plan and show up for everyone who opens this link, on any device." : syncState==="readonly" ? "You can see the shared plan and play with the numbers, but your changes stay on this device." : "Saved on this device only.")
-              : "Numbers save on this device. To get them to the others, send a share link, or make them the agreed plan on GitHub."}>
+              : syncUrl
+                ? (syncState==="on" ? "Live sync is on. Every change saves to the shared plan within a second or two and every device picks it up within about ten." : syncState==="error" ? "Can't reach the Google script right now. Changes are kept here and sent when it comes back." : "Connecting to the shared plan.")
+                : "No shared plan set up yet. Numbers save on this device only. Paste the Google script link here, or put it in sync.json in the repo so nobody has to."}>
             {IN_VIEWER
               ? <Val label="Live sync" value={syncState==="on" ? "On" : syncState==="readonly" ? "Read only" : "Off"} strong/>
               : <>
+                {looksLikeSyncUrl(syncUrlRepo)
+                  ? <Val label="Sync link" hint="Set in sync.json in the repo" value={syncState==="on" ? "Connected" : syncState==="error" ? "Problem" : "Connecting"} strong c={syncState==="error"?"warnc":""}/>
+                  : <NumRow id="syncUrl" text label="Sync link" hint="Web app URL from the Google script, ends in /exec" placeholder="https://script.google.com/macros/s/…/exec" value={syncUrlLocal} onChange={setSyncUrlLocal}/>}
                 <button type="button" className="btn" onClick={shareLink}>Copy share link</button>
-                <div className="gfoot" style={{padding:"0 16px 12px"}}>Whoever opens the link sees these exact numbers. Good for "have a look at this".</div>
+                <div className="gfoot" style={{padding:"0 16px 12px"}}>Whoever opens the link sees these exact numbers. Good for "have a look at this" without touching the shared plan.</div>
                 <button type="button" className="btn" onClick={copyPlanFile}>Copy plan file</button>
-                <div className="gfoot" style={{padding:"0 16px 12px"}}>Paste it into plan.json in the GitHub repo. Everyone gets asked to load it next time they open the page.</div>
+                <div className="gfoot" style={{padding:"0 16px 12px"}}>{syncUrl ? "A backup copy of the plan you can keep in plan.json in the repo." : "Paste it into plan.json in the GitHub repo. Everyone gets asked to load it next time they open the page."}</div>
               </>}
           </Group>
           <Group title="Where the starting numbers came from" footer="Checked October 2026. Land price, build cost and finished value are the ones you most need to replace with your own.">
