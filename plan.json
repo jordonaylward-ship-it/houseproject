@@ -1,6 +1,6 @@
 {
   "plan": {
-    "projectName": "Co-living build",
+    "projectName": "Co-living Plan",
     "location": "Brisbane, QLD",
     "startMonth": "2026-11",
     "land": 780000,
@@ -31,8 +31,9 @@
     "leaseUpMonths": 1,
     "finishedValue": 1000000,
     "lvr": 80,
-    "rate": 7.1,
+    "rate": 7.25,
     "loanType": "io",
+    "ioYears": 5,
     "term": 30,
     "payDown": "yes",
     "rentMode": "rooms",
@@ -50,7 +51,7 @@
     "internet": 1300,
     "cleaning": 2000,
     "taxRate": 32,
-    "valueGrowth": 5,
+    "valueGrowth": 4,
     "rentGrowth": 3.5,
     "costGrowth": 3,
     "sellCostPct": 2.5,
@@ -66,31 +67,42 @@
         "share": 25,
         "rate": "",
         "tax": "",
-        "fund": "loan"
+        "fund": "loan",
+        "jointWith": -1,
+        "payback": "weekly"
       },
       {
         "name": "Jordy",
         "share": 25,
         "rate": "",
         "tax": "",
-        "fund": "boots"
+        "fund": "boots",
+        "jointWith": 3,
+        "payback": "weekly"
       },
       {
         "name": "Joel",
         "share": 25,
         "rate": "",
         "tax": "",
-        "fund": "undecided"
+        "fund": "boots",
+        "jointWith": -1,
+        "payback": "undecided"
       },
       {
         "name": "Bonnie",
         "share": 25,
         "rate": "",
         "tax": "",
-        "fund": "boots"
+        "fund": "boots",
+        "jointWith": 1,
+        "payback": "weekly"
       }
     ],
-    "checks": {}
+    "checks": {},
+    "notes": [],
+    "noteEdits": {},
+    "schema": 3
   },
-  "updatedAt": 1791921520911
+  "updatedAt": 1794437377411
 }
